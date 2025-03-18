@@ -1,0 +1,18 @@
+{
+  "name": "saas-platform",
+  "version": "1.0.0",
+  "description": "A SaaS platform with React frontend and NestJS backend",
+  "scripts": {
+    "install:all": "npm run install:frontend && npm run install:backend",
+    "install:frontend": "cd frontend && npm install",
+    "install:backend": "cd backend && npm install",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run start:dev",
+    "build": "npm run build:frontend && npm run build:backend",
+    "build:frontend": "cd frontend && npm run build",
+    "build:backend": "cd backend && npm run build"
+  },
+  "keywords": ["saas", "react", "nestjs", "typescript"],
+  "author": "",
+  "license": "ISC"
+}
