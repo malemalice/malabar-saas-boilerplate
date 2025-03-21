@@ -2,6 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import RootLayout from './components/layout/root-layout';
+import { NavigationMenu } from './components/ui/navigation-menu';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
@@ -10,7 +12,10 @@ import Profile from './pages/Profile';
 const queryClient = new QueryClient();
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
 
@@ -26,7 +31,9 @@ const App = () => {
               path="/dashboard"
               element={
                 <PrivateRoute>
-                  <Dashboard />
+                  <RootLayout>
+                    <Dashboard />
+                  </RootLayout>
                 </PrivateRoute>
               }
             />
@@ -34,7 +41,9 @@ const App = () => {
               path="/profile"
               element={
                 <PrivateRoute>
-                  <Profile />
+                  <RootLayout>
+                    <Profile />
+                  </RootLayout>
                 </PrivateRoute>
               }
             />
