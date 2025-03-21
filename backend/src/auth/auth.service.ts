@@ -45,4 +45,8 @@ export class AuthService {
   private generateToken(userId: string) {
     return this.jwtService.sign({ sub: userId });
   }
+
+  async updateProfile(userId: string, updateData: { name: string }) {
+    return this.userService.update(userId, updateData);
+  }
 }

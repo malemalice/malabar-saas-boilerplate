@@ -27,6 +27,11 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
       .toUpperCase();
   };
 
+  const getMenuItemClassName = (path: string) => {
+    const baseClasses = 'group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50';
+    return `${baseClasses} ${location.pathname === path ? 'bg-accent/50 font-extrabold text-yellow-500' : ''}`;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
@@ -40,40 +45,24 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
             <NavigationMenu>
               <NavigationMenuList>
                 <NavigationMenuItem>
-                  <Link to="/dashboard">
-                    <NavigationMenuLink
-                      className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 ${location.pathname === '/dashboard' ? 'bg-accent/50 font-bold' : ''}`}
-                    >
-                      Dashboard
-                    </NavigationMenuLink>
-                  </Link>
+                  <NavigationMenuLink asChild>
+                    <Link to="/dashboard" className={getMenuItemClassName('/dashboard')}>Dashboard</Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <Link to="/tests">
-                    <NavigationMenuLink
-                      className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 ${location.pathname === '/tests' ? 'bg-accent/50 font-bold' : ''}`}
-                    >
-                      Tests
-                    </NavigationMenuLink>
-                  </Link>
+                  <NavigationMenuLink asChild>
+                    <Link to="/tests" className={getMenuItemClassName('/tests')}>Tests</Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <Link to="/candidates">
-                    <NavigationMenuLink
-                      className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 ${location.pathname === '/candidates' ? 'bg-accent/50 font-bold' : ''}`}
-                    >
-                      Candidates
-                    </NavigationMenuLink>
-                  </Link>
+                  <NavigationMenuLink asChild>
+                    <Link to="/candidates" className={getMenuItemClassName('/candidates')}>Candidates</Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <Link to="/library">
-                    <NavigationMenuLink
-                      className={`group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50 ${location.pathname === '/library' ? 'bg-accent/50 font-bold' : ''}`}
-                    >
-                      Library
-                    </NavigationMenuLink>
-                  </Link>
+                  <NavigationMenuLink asChild>
+                    <Link to="/library" className={getMenuItemClassName('/library')}>Library</Link>
+                  </NavigationMenuLink>
                 </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
