@@ -70,6 +70,72 @@ npm run migration:show
 
 Make sure to replace `MigrationName` with a descriptive name for your migration (e.g., CreateUserTable, AddEmailColumn).
 
+## Testing
+
+The application uses Jest as the testing framework. Tests are organized into unit tests and e2e tests.
+
+### Running Tests
+
+```bash
+# Run unit tests
+npm run test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run tests with coverage report
+npm run test:cov
+
+# Run e2e tests
+npm run test:e2e
+```
+
+### Writing Unit Tests
+
+We follow these best practices for writing unit tests:
+
+1. **Test File Organization**
+   - Test files should be placed next to the file they test
+   - Use the `.spec.ts` suffix for test files
+   - Example: `auth.service.ts` → `auth.service.spec.ts`
+
+2. **Test Suite Structure**
+   ```typescript
+   describe('ServiceName', () => {
+     describe('methodName', () => {
+       it('should do something specific', () => {
+         // Test case
+       });
+     });
+   });
+   ```
+
+3. **Mocking Dependencies**
+   - Use Jest's mock functions for dependencies
+   - Create mock implementations for external services
+   - Example:
+   ```typescript
+   const mockUserService = {
+     findByEmail: jest.fn(),
+     create: jest.fn()
+   };
+   ```
+
+4. **Test Setup**
+   - Use `beforeEach` to reset mocks and create fresh instances
+   - Use `afterEach` for cleanup if needed
+   - Mock external services and repositories
+
+5. **Testing Async Code**
+   - Use async/await for asynchronous tests
+   - Test both success and error cases
+   - Verify error handling and edge cases
+
+6. **Test Coverage**
+   - Aim for high test coverage (80% or higher)
+   - Focus on testing business logic and edge cases
+   - Use coverage reports to identify untested code
+
 ## API Documentation
 
 The API documentation is available through Swagger UI at `/swagger` when the server is running.
@@ -90,27 +156,3 @@ src/
 ├── migrations/     # Database migrations
 └── main.ts         # Application entry point
 ```
-
-## Testing
-
-```bash
-# Run unit tests
-npm run test
-
-# Run e2e tests
-npm run test:e2e
-
-# Run test coverage
-npm run test:cov
-```
-
-## Contributing
-
-1. Create a feature branch
-2. Commit your changes
-3. Push to the branch
-4. Create a Pull Request
-
-## License
-
-This project is licensed under the MIT License.

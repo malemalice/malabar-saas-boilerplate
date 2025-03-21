@@ -7,6 +7,7 @@ import { UpdateProfileDto } from './dto/update-profile.dto';
 import { VerifyEmailDto, ResendVerificationDto, VerificationResponseDto } from './dto/verification.dto';
 import { RequestPasswordResetDto, ResetPasswordDto, PasswordResetResponseDto } from './dto/password-reset.dto';
 import { ChangePasswordDto, ChangePasswordResponseDto } from './dto/change-password.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -90,5 +91,13 @@ export class AuthController {
   async changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
     const ipAddress = req.ip || req.connection.remoteAddress;
     return this.authService.changePassword(req.user.id, changePasswordDto.currentPassword, changePasswordDto.newPassword, ipAddress);
+  }
+
+  @Post('refresh')
+  @ApiOperation({ summary: 'Refresh access token using refresh token' })
+  @ApiResponse({ status: 200, description: 'Token refreshed successfully', type: AuthResponseDto })
+  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token' })
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
+    return this.authService.refreshToken(refreshTokenDto.refreshToken);
   }
 }

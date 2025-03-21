@@ -10,6 +10,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MailerService } from '@nestjs-modules/mailer';
 import { PasswordResetRateLimit } from './entities/password-reset-rate-limit.entity';
+import { RefreshToken } from './entities/refresh-token.entity';
 
 @Injectable()
 export class AuthService {
@@ -24,6 +25,8 @@ export class AuthService {
     private passwordResetTokenRepo: Repository<PasswordResetToken>,
     @InjectRepository(PasswordResetRateLimit)
     private passwordResetRateLimitRepo: Repository<PasswordResetRateLimit>,
+    @InjectRepository(RefreshToken)
+    private refreshTokenRepo: Repository<RefreshToken>,
   ) {}
 
   async signup(email: string, password: string, name: string) {
@@ -39,9 +42,10 @@ export class AuthService {
       name,
     });
 
-    const token = this.generateToken(user.id);
+    const accessToken = this.generateAccessToken(user.id);
+    const refreshToken = await this.generateRefreshToken(user.id);
     await this.sendVerificationEmail(user);
-    return { user, token };
+    return { user, accessToken, refreshToken };
   }
 
   async login(email: string, password: string) {
@@ -55,12 +59,29 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const token = this.generateToken(user.id);
-    return { user, token };
+    const accessToken = this.generateAccessToken(user.id);
+    const refreshToken = await this.generateRefreshToken(user.id);
+    return { user, accessToken, refreshToken };
   }
 
-  private generateToken(userId: string) {
-    return this.jwtService.sign({ sub: userId });
+  private generateAccessToken(userId: string) {
+    return this.jwtService.sign({ sub: userId }, { expiresIn: '15m' });
+  }
+
+  private async generateRefreshToken(userId: string): Promise<string> {
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiration
+
+    const refreshToken = this.refreshTokenRepo.create({
+      token,
+      userId,
+      expiresAt,
+      isRevoked: false
+    });
+
+    await this.refreshTokenRepo.save(refreshToken);
+    return token;
   }
 
   async updateProfile(userId: string, updateData: { name: string }) {
@@ -261,5 +282,27 @@ export class AuthService {
 
     await this.sendVerificationEmail(user);
     return { message: 'Verification email sent successfully' };
+  }
+
+  async refreshToken(refreshToken: string) {
+    const storedToken = await this.refreshTokenRepo.findOne({
+      where: { token: refreshToken, isRevoked: false },
+      relations: ['user']
+    });
+
+    if (!storedToken || storedToken.expiresAt < new Date()) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    // Revoke the current refresh token
+    storedToken.isRevoked = true;
+    await this.refreshTokenRepo.save(storedToken);
+
+    // Generate new tokens
+    const accessToken = this.generateAccessToken(storedToken.userId);
+    const newRefreshToken = await this.generateRefreshToken(storedToken.userId);
+
+    const user = await this.userService.findById(storedToken.userId);
+    return { user, accessToken, refreshToken: newRefreshToken };
   }
 }

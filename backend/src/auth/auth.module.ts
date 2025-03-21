@@ -11,13 +11,14 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { VerificationToken } from './entities/verification-token.entity';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
 import { PasswordResetRateLimit } from './entities/password-reset-rate-limit.entity';
+import { RefreshToken } from './entities/refresh-token.entity';
 
 @Module({
   imports: [
     UserModule,
     PassportModule,
     MailModule,
-    TypeOrmModule.forFeature([VerificationToken, PasswordResetRateLimit]),
+    TypeOrmModule.forFeature([VerificationToken, PasswordResetRateLimit, RefreshToken]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
