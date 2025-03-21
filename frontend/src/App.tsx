@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import PublicRoute from './components/auth/PublicRoute';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
@@ -26,8 +27,8 @@ const App = () => {
       <AuthProvider>
         <Router>
           <Routes>
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<SignUp />} />
+            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+            <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/verify-pending" element={<VerifyPending />} />
             <Route
