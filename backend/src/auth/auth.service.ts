@@ -1,13 +1,23 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, NotFoundException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
+import * as crypto from 'crypto';
 import { UserService } from '../user/user.service';
+import { VerificationToken } from './entities/verification-token.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class AuthService {
   constructor(
     private userService: UserService,
     private jwtService: JwtService,
+    private configService: ConfigService,
+    private mailerService: MailerService,
+    @InjectRepository(VerificationToken)
+    private verificationTokenRepo: Repository<VerificationToken>,
   ) {}
 
   async signup(email: string, password: string, name: string) {
@@ -24,6 +34,7 @@ export class AuthService {
     });
 
     const token = this.generateToken(user.id);
+    await this.sendVerificationEmail(user);
     return { user, token };
   }
 
@@ -39,6 +50,7 @@ export class AuthService {
     }
 
     const token = this.generateToken(user.id);
+    await this.sendVerificationEmail(user);
     return { user, token };
   }
 
@@ -48,5 +60,87 @@ export class AuthService {
 
   async updateProfile(userId: string, updateData: { name: string }) {
     return this.userService.update(userId, updateData);
+  }
+
+  private async generateVerificationToken(userId: string): Promise<VerificationToken> {
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 24);
+
+    const verificationToken = this.verificationTokenRepo.create({
+      token,
+      userId,
+      expiresAt,
+    });
+
+    return this.verificationTokenRepo.save(verificationToken);
+  }
+
+  private async sendVerificationEmail(user: any) {
+    const verificationToken = await this.generateVerificationToken(user.id);
+    const verificationUrl = `${this.configService.get('FRONTEND_URL')}/verify-email?token=${verificationToken.token}`;
+
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: 'Please verify your email',
+      template: './verification',
+      context: {
+        name: user.name,
+        url: verificationUrl,
+      },
+    });
+  }
+
+  async verifyEmail(token: string): Promise<{ message: string }> {
+    const verificationToken = await this.verificationTokenRepo.findOne({
+      where: { token },
+      relations: ['user'],
+    });
+
+    if (!verificationToken) {
+      throw new NotFoundException('Invalid verification token');
+    }
+
+    if (verificationToken.expiresAt < new Date()) {
+      await this.verificationTokenRepo.remove(verificationToken);
+      throw new UnauthorizedException('Verification token has expired');
+    }
+
+    verificationToken.user.isVerified = true;
+    await this.userService.update(verificationToken.user.id, { isVerified: true });
+    await this.verificationTokenRepo.remove(verificationToken);
+
+    return { message: 'Email verified successfully' };
+  }
+
+  async resendVerificationEmail(email: string): Promise<{ message: string; nextResendTime?: Date }> {
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.isVerified) {
+      throw new ConflictException('Email is already verified');
+    }
+
+    const existingToken = await this.verificationTokenRepo.findOne({
+      where: { userId: user.id },
+      order: { createdAt: 'DESC' }
+    });
+
+    if (existingToken) {
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+      if (existingToken.createdAt > fiveMinutesAgo) {
+        const nextResendTime = new Date(existingToken.createdAt.getTime() + 5 * 60 * 1000);
+        throw new ConflictException({
+          message: 'Please wait before requesting another verification email',
+          nextResendTime
+        });
+      }
+      await this.verificationTokenRepo.remove(existingToken);
+    }
+
+    await this.sendVerificationEmail(user);
+    return { message: 'Verification email sent successfully' };
   }
 }

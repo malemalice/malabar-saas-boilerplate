@@ -47,6 +47,29 @@ npm run build
 npm run start
 ```
 
+### Database Migrations
+
+We use TypeORM for database migrations. Here's how to work with migrations:
+
+```bash
+# Generate a new migration
+npm run migration:generate src/migrations/MigrationName
+
+# Create an empty migration file
+npm run migration:create src/migrations/MigrationName
+
+# Run pending migrations
+npm run migration:run
+
+# Revert the last migration
+npm run migration:revert
+
+# Show migration status
+npm run migration:show
+```
+
+Make sure to replace `MigrationName` with a descriptive name for your migration (e.g., CreateUserTable, AddEmailColumn).
+
 ## API Documentation
 
 The API documentation is available through Swagger UI at `/swagger` when the server is running.

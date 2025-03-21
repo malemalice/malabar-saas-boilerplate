@@ -46,7 +46,7 @@ const SignUp = () => {
     try {
       setError('');
       await signup(data.email, data.password, data.name);
-      navigate('/dashboard');
+      navigate('/verify-pending', { state: { email: data.email } });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create account');
     }

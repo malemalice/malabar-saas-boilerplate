@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import { SignupDto, LoginDto, AuthResponseDto } from './dto/auth.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { VerifyEmailDto, ResendVerificationDto, VerificationResponseDto } from './dto/verification.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -44,5 +45,21 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
     return this.authService.updateProfile(req.user.id, updateProfileDto);
+  }
+
+  @Post('verify-email')
+  @ApiOperation({ summary: 'Verify email address' })
+  @ApiResponse({ status: 200, description: 'Email verified successfully', type: VerificationResponseDto })
+  @ApiResponse({ status: 404, description: 'Invalid verification token' })
+  async verifyEmail(@Body() verifyEmailDto: VerifyEmailDto) {
+    return this.authService.verifyEmail(verifyEmailDto.token);
+  }
+
+  @Post('resend-verification')
+  @ApiOperation({ summary: 'Resend verification email' })
+  @ApiResponse({ status: 200, description: 'Verification email sent successfully', type: VerificationResponseDto })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async resendVerification(@Body() resendVerificationDto: ResendVerificationDto) {
+    return this.authService.resendVerificationEmail(resendVerificationDto.email);
   }
 }

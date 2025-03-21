@@ -5,6 +5,7 @@ interface User {
   id: string;
   email: string;
   name: string;
+  isVerified: boolean;
 }
 
 interface AuthContextType {
@@ -15,6 +16,7 @@ interface AuthContextType {
   signup: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  resendVerification: () => Promise<{ message: string; nextResendTime: Date }>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -78,6 +80,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(updatedUser);
   };
 
+  const [lastVerificationTime, setLastVerificationTime] = useState<Date | null>(null);
+
+  const resendVerification = async () => {
+    const now = new Date();
+    if (lastVerificationTime) {
+      const timeDiff = (now.getTime() - lastVerificationTime.getTime()) / 1000;
+      if (timeDiff < 300) { // 5 minutes in seconds
+        const nextResendTime = new Date(lastVerificationTime.getTime() + 300000);
+        const error = new Error('Please wait before requesting another verification email');
+        Object.assign(error, {
+          response: {
+            data: {
+              message: 'Please wait before requesting another verification email',
+              nextResendTime
+            }
+          }
+        });
+        throw error;
+      }
+    }
+
+    const { data } = await axios.post('/api/auth/resend-verification');
+    setLastVerificationTime(now);
+    return data;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -88,6 +116,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signup,
         logout,
         updateProfile,
+        resendVerification,
       }}
     >
       {children}

@@ -1,5 +1,6 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
 import { Exclude } from 'class-transformer';
+import { VerificationToken } from '../auth/entities/verification-token.entity';
 
 @Entity('users')
 export class User {
@@ -16,9 +17,15 @@ export class User {
   @Exclude()
   password: string;
 
+  @Column({ default: false })
+  isVerified: boolean;
+
   @CreateDateColumn()
   createdAt: Date;
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany(() => VerificationToken, token => token.user)
+  verificationTokens: VerificationToken[];
 }

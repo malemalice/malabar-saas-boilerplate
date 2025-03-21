@@ -6,11 +6,16 @@ import { UserModule } from '../user/user.module';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './jwt.strategy';
+import { MailModule } from '../mail/mail.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { VerificationToken } from './entities/verification-token.entity';
 
 @Module({
   imports: [
     UserModule,
     PassportModule,
+    MailModule,
+    TypeOrmModule.forFeature([VerificationToken]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

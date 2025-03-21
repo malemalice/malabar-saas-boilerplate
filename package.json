@@ -12,7 +12,18 @@
     "build:frontend": "cd frontend && npm run build",
     "build:backend": "cd backend && npm run build"
   },
-  "keywords": ["saas", "react", "nestjs", "typescript"],
+  "keywords": [
+    "saas",
+    "react",
+    "nestjs",
+    "typescript"
+  ],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@nestjs-modules/mailer": "^2.0.2",
+    "@types/nodemailer": "^6.4.17",
+    "handlebars": "^4.7.8",
+    "nodemailer": "^6.10.0"
+  }
 }
