@@ -10,6 +10,8 @@ import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
 import VerifyEmail from './pages/VerifyEmail';
 import VerifyPending from './pages/VerifyPending';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 const queryClient = new QueryClient();
 
@@ -31,6 +33,8 @@ const App = () => {
             <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
             <Route path="/verify-email" element={<VerifyEmail />} />
             <Route path="/verify-pending" element={<VerifyPending />} />
+            <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+            <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
             <Route
               path="/dashboard"
               element={

@@ -9,13 +9,15 @@ import { JwtStrategy } from './jwt.strategy';
 import { MailModule } from '../mail/mail.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { VerificationToken } from './entities/verification-token.entity';
+import { PasswordResetToken } from './entities/password-reset-token.entity';
+import { PasswordResetRateLimit } from './entities/password-reset-rate-limit.entity';
 
 @Module({
   imports: [
     UserModule,
     PassportModule,
     MailModule,
-    TypeOrmModule.forFeature([VerificationToken]),
+    TypeOrmModule.forFeature([VerificationToken, PasswordResetRateLimit]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -24,6 +26,7 @@ import { VerificationToken } from './entities/verification-token.entity';
       }),
       inject: [ConfigService],
     }),
+    TypeOrmModule.forFeature([PasswordResetToken]),
   ],
   providers: [AuthService, JwtStrategy],
   controllers: [AuthController],

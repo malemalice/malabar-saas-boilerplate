@@ -5,6 +5,7 @@ import { JwtAuthGuard } from './jwt-auth.guard';
 import { SignupDto, LoginDto, AuthResponseDto } from './dto/auth.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { VerifyEmailDto, ResendVerificationDto, VerificationResponseDto } from './dto/verification.dto';
+import { RequestPasswordResetDto, ResetPasswordDto, PasswordResetResponseDto } from './dto/password-reset.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -45,6 +46,22 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   async updateProfile(@Request() req, @Body() updateProfileDto: UpdateProfileDto) {
     return this.authService.updateProfile(req.user.id, updateProfileDto);
+  }
+
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Request password reset email' })
+  @ApiResponse({ status: 200, description: 'Password reset email sent', type: PasswordResetResponseDto })
+  @ApiResponse({ status: 404, description: 'User not found' })
+  async requestPasswordReset(@Body() resetDto: RequestPasswordResetDto) {
+    return this.authService.requestPasswordReset(resetDto.email);
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Reset password with token' })
+  @ApiResponse({ status: 200, description: 'Password reset successful', type: PasswordResetResponseDto })
+  @ApiResponse({ status: 401, description: 'Invalid or expired token' })
+  async resetPassword(@Body() resetDto: ResetPasswordDto) {
+    return this.authService.resetPassword(resetDto.token, resetDto.newPassword);
   }
 
   @Post('verify-email')

@@ -5,9 +5,11 @@ import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { UserService } from '../user/user.service';
 import { VerificationToken } from './entities/verification-token.entity';
+import { PasswordResetToken } from './entities/password-reset-token.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { MailerService } from '@nestjs-modules/mailer';
+import { PasswordResetRateLimit } from './entities/password-reset-rate-limit.entity';
 
 @Injectable()
 export class AuthService {
@@ -18,6 +20,10 @@ export class AuthService {
     private mailerService: MailerService,
     @InjectRepository(VerificationToken)
     private verificationTokenRepo: Repository<VerificationToken>,
+    @InjectRepository(PasswordResetToken)
+    private passwordResetTokenRepo: Repository<PasswordResetToken>,
+    @InjectRepository(PasswordResetRateLimit)
+    private passwordResetRateLimitRepo: Repository<PasswordResetRateLimit>,
   ) {}
 
   async signup(email: string, password: string, name: string) {
@@ -89,6 +95,89 @@ export class AuthService {
         url: verificationUrl,
       },
     });
+  }
+
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
+    const user = await this.userService.findByEmail(email);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    // Check rate limit
+    const rateLimit = await this.passwordResetRateLimitRepo.findOne({ where: { email } });
+    const now = new Date();
+
+    if (rateLimit) {
+      if (now < rateLimit.nextAllowedAttempt) {
+        const waitMinutes = Math.ceil((rateLimit.nextAllowedAttempt.getTime() - now.getTime()) / (1000 * 60));
+        throw new ConflictException(`Too many reset attempts. Please wait ${waitMinutes} minutes before trying again.`);
+      }
+
+      // Update rate limit
+      rateLimit.attemptCount += 1;
+      rateLimit.lastAttempt = now;
+      rateLimit.nextAllowedAttempt = new Date(now.getTime() + this.calculateCooldown(rateLimit.attemptCount));
+      await this.passwordResetRateLimitRepo.save(rateLimit);
+    } else {
+      // Create new rate limit entry
+      const newRateLimit = this.passwordResetRateLimitRepo.create({
+        email,
+        attemptCount: 1,
+        lastAttempt: now,
+        nextAllowedAttempt: new Date(now.getTime() + this.calculateCooldown(1))
+      });
+      await this.passwordResetRateLimitRepo.save(newRateLimit);
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1);
+
+    const resetToken = this.passwordResetTokenRepo.create({
+      token,
+      userId: user.id,
+      expiresAt,
+    });
+
+    await this.passwordResetTokenRepo.save(resetToken);
+    const resetUrl = `${this.configService.get('FRONTEND_URL')}/reset-password?token=${token}`;
+
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: 'Reset Your Password',
+      template: './password-reset',
+      context: {
+        name: user.name,
+        resetUrl,
+      },
+    });
+
+    return { message: 'Password reset instructions sent to your email' };
+  }
+
+  private calculateCooldown(attemptCount: number): number {
+    // Base cooldown of 15 minutes
+    const baseCooldown = 15 * 60 * 1000; // 15 minutes in milliseconds
+    
+    // Exponential backoff: doubles the cooldown for each attempt
+    return baseCooldown * Math.pow(2, attemptCount - 1);
+  }
+
+  async resetPassword(token: string, newPassword: string): Promise<{ message: string }> {
+    const resetToken = await this.passwordResetTokenRepo.findOne({
+      where: { token },
+      relations: ['user'],
+    });
+
+    if (!resetToken || resetToken.expiresAt < new Date()) {
+      throw new UnauthorizedException('Invalid or expired reset token');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.userService.update(resetToken.userId, { password: hashedPassword });
+    await this.passwordResetTokenRepo.remove(resetToken);
+
+    return { message: 'Password has been reset successfully' };
   }
 
   async verifyEmail(token: string): Promise<{ message: string }> {

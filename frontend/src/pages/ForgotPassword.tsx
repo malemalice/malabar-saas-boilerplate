@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -12,47 +11,59 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import axios from 'axios';
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
 const formSchema = z.object({
   email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
-type LoginForm = z.infer<typeof formSchema>;
+type ForgotPasswordForm = z.infer<typeof formSchema>;
 
-const Login = () => {
-  const { login } = useAuth();
+const ForgotPassword = () => {
   const navigate = useNavigate();
   const [error, setError] = useState('');
-  const form = useForm<LoginForm>({
+  const [success, setSuccess] = useState('');
+  const form = useForm<ForgotPasswordForm>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
-      password: "",
     },
   });
 
-  const onSubmit = async (data: LoginForm) => {
+  const onSubmit = async (data: ForgotPasswordForm) => {
     try {
       setError('');
-      await login(data.email, data.password);
-      navigate('/dashboard');
+      setSuccess('');
+      await axios.post('/api/auth/forgot-password', { email: data.email });
+      setSuccess('Password reset instructions have been sent to your email');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to login');
+      const response = err.response?.data;
+      if (response?.error === 'RATE_LIMIT_EXCEEDED' && response?.nextAllowedAttempt) {
+        const nextAttempt = new Date(response.nextAllowedAttempt);
+        const waitMinutes = Math.ceil((nextAttempt.getTime() - Date.now()) / (1000 * 60));
+        setError(`Too many reset attempts. Please wait ${waitMinutes} minute${waitMinutes > 1 ? 's' : ''} before trying again.`);
+      } else {
+        setError(response?.message || 'Failed to process request');
+      }
     }
   };
 
   return (
     <div className="container mx-auto max-w-md px-6 py-8">
       <div className="flex flex-col items-center space-y-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Forgot Password</h1>
         
         {error && (
           <div className="w-full rounded-md bg-destructive/15 p-3 text-sm text-destructive">
             {error}
+          </div>
+        )}
+        {success && (
+          <div className="w-full rounded-md bg-green-100 p-3 text-sm text-green-600">
+            {success}
           </div>
         )}
 
@@ -78,39 +89,17 @@ const Login = () => {
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Password</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Enter your password"
-                      type="password"
-                      autoComplete="current-password"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
             <Button
               type="submit"
               className="w-full"
               disabled={form.formState.isSubmitting}
             >
-              {form.formState.isSubmitting ? 'Signing in...' : 'Sign In'}
+              {form.formState.isSubmitting ? 'Sending...' : 'Send Reset Instructions'}
             </Button>
 
-            <div className="text-center text-sm space-y-2">
-              <RouterLink to="/signup" className="text-primary hover:underline block">
-                Don't have an account? Sign Up
-              </RouterLink>
-              <RouterLink to="/forgot-password" className="text-primary hover:underline block">
-                Forgot your password?
+            <div className="text-center text-sm">
+              <RouterLink to="/login" className="text-primary hover:underline">
+                Back to Sign In
               </RouterLink>
             </div>
           </form>
@@ -120,4 +109,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default ForgotPassword;

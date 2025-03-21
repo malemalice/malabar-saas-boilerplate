@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -12,43 +11,62 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import axios from 'axios';
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 
 const formSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  newPassword: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string()
+}).refine((data) => data.newPassword === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
-type LoginForm = z.infer<typeof formSchema>;
+type ResetPasswordForm = z.infer<typeof formSchema>;
 
-const Login = () => {
-  const { login } = useAuth();
+const ResetPassword = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get('token');
   const [error, setError] = useState('');
-  const form = useForm<LoginForm>({
+  
+  const form = useForm<ResetPasswordForm>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      newPassword: "",
+      confirmPassword: "",
     },
   });
 
-  const onSubmit = async (data: LoginForm) => {
+  const onSubmit = async (data: ResetPasswordForm) => {
     try {
       setError('');
-      await login(data.email, data.password);
-      navigate('/dashboard');
+      await axios.post('/api/auth/reset-password', {
+        token,
+        newPassword: data.newPassword
+      });
+      navigate('/login', { state: { message: 'Password has been reset successfully. Please login with your new password.' } });
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to login');
+      setError(err.response?.data?.message || 'Failed to reset password');
     }
   };
+
+  if (!token) {
+    return (
+      <div className="container mx-auto max-w-md px-6 py-8">
+        <div className="w-full rounded-md bg-destructive/15 p-3 text-sm text-destructive">
+          Invalid or expired reset token. Please request a new password reset.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto max-w-md px-6 py-8">
       <div className="flex flex-col items-center space-y-6">
-        <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Reset Password</h1>
         
         {error && (
           <div className="w-full rounded-md bg-destructive/15 p-3 text-sm text-destructive">
@@ -60,15 +78,15 @@ const Login = () => {
           <form onSubmit={form.handleSubmit(onSubmit)} className="w-full space-y-6">
             <FormField
               control={form.control}
-              name="email"
+              name="newPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>New Password</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter your email"
-                      type="email"
-                      autoComplete="email"
+                      placeholder="Enter new password"
+                      type="password"
+                      autoComplete="new-password"
                       autoFocus
                       {...field}
                     />
@@ -80,15 +98,15 @@ const Login = () => {
 
             <FormField
               control={form.control}
-              name="password"
+              name="confirmPassword"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>Confirm New Password</FormLabel>
                   <FormControl>
                     <Input
-                      placeholder="Enter your password"
+                      placeholder="Confirm new password"
                       type="password"
-                      autoComplete="current-password"
+                      autoComplete="new-password"
                       {...field}
                     />
                   </FormControl>
@@ -102,17 +120,8 @@ const Login = () => {
               className="w-full"
               disabled={form.formState.isSubmitting}
             >
-              {form.formState.isSubmitting ? 'Signing in...' : 'Sign In'}
+              {form.formState.isSubmitting ? 'Resetting Password...' : 'Reset Password'}
             </Button>
-
-            <div className="text-center text-sm space-y-2">
-              <RouterLink to="/signup" className="text-primary hover:underline block">
-                Don't have an account? Sign Up
-              </RouterLink>
-              <RouterLink to="/forgot-password" className="text-primary hover:underline block">
-                Forgot your password?
-              </RouterLink>
-            </div>
           </form>
         </Form>
       </div>
@@ -120,4 +129,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default ResetPassword;
