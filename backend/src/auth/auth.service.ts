@@ -56,7 +56,6 @@ export class AuthService {
     }
 
     const token = this.generateToken(user.id);
-    await this.sendVerificationEmail(user);
     return { user, token };
   }
 
