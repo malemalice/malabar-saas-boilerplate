@@ -6,6 +6,7 @@ import { SignupDto, LoginDto, AuthResponseDto } from './dto/auth.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { VerifyEmailDto, ResendVerificationDto, VerificationResponseDto } from './dto/verification.dto';
 import { RequestPasswordResetDto, ResetPasswordDto, PasswordResetResponseDto } from './dto/password-reset.dto';
+import { ChangePasswordDto, ChangePasswordResponseDto } from './dto/change-password.dto';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -78,5 +79,16 @@ export class AuthController {
   @ApiResponse({ status: 404, description: 'User not found' })
   async resendVerification(@Body() resendVerificationDto: ResendVerificationDto) {
     return this.authService.resendVerificationEmail(resendVerificationDto.email);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('change-password')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Change user password' })
+  @ApiResponse({ status: 200, description: 'Password changed successfully', type: ChangePasswordResponseDto })
+  @ApiResponse({ status: 401, description: 'Invalid current password' })
+  async changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
+    const ipAddress = req.ip || req.connection.remoteAddress;
+    return this.authService.changePassword(req.user.id, changePasswordDto.currentPassword, changePasswordDto.newPassword, ipAddress);
   }
 }

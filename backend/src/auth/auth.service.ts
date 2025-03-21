@@ -202,6 +202,37 @@ export class AuthService {
     return { message: 'Email verified successfully' };
   }
 
+  async changePassword(userId: string, currentPassword: string, newPassword: string, ipAddress?: string): Promise<{ message: string }> {
+    const user = await this.userService.findById(userId);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.userService.update(userId, { password: hashedPassword });
+
+    // Send password change notification email
+    const resetUrl = `${this.configService.get('FRONTEND_URL')}/reset-password`;
+    await this.mailerService.sendMail({
+      to: user.email,
+      subject: 'Password Change Notification',
+      template: './password-change',
+      context: {
+        name: user.name,
+        date: new Date().toLocaleString(),
+        resetUrl,
+        ipAddress: ipAddress || 'Unknown'
+      },
+    });
+
+    return { message: 'Password changed successfully' };
+  }
+
   async resendVerificationEmail(email: string): Promise<{ message: string; nextResendTime?: Date }> {
     const user = await this.userService.findByEmail(email);
     if (!user) {
