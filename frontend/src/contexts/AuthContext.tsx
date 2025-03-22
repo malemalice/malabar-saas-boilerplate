@@ -104,7 +104,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     }
 
-    const { data } = await axios.post('/api/auth/resend-verification');
+    const { data } = await axios.post('/api/auth/resend-verification', {
+      email: user?.email
+    });
     setLastVerificationTime(now);
     return data;
   };
