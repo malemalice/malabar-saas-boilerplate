@@ -1,10 +1,10 @@
-import { MigrationInterface, QueryRunner, Table, TableIndex, TableForeignKey } from "typeorm";
+import { MigrationInterface, QueryRunner, Table, TableForeignKey } from "typeorm";
 
-export class AddPasswordResetTokens1689924000002 implements MigrationInterface {
+export class CreateRefreshTokensTable1689924000004 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.createTable(
             new Table({
-                name: "password_reset_token",
+                name: "refresh_token",
                 columns: [
                     {
                         name: "id",
@@ -31,30 +31,27 @@ export class AddPasswordResetTokens1689924000002 implements MigrationInterface {
                         name: "createdAt",
                         type: "timestamp",
                         default: "CURRENT_TIMESTAMP",
+                        isNullable: false,
                     },
                     {
-                        name: "updatedAt",
+                        name: "isRevoked",
+                        type: "boolean",
+                        default: false,
+                        isNullable: false,
+                    },
+                    {
+                        name: "revokedAt",
                         type: "timestamp",
-                        default: "CURRENT_TIMESTAMP",
+                        isNullable: true,
                     },
                 ],
             }),
             true
         );
 
-        await queryRunner.createIndex(
-            "password_reset_tokens",
-            new TableIndex({
-                name: "IDX_PASSWORD_RESET_TOKEN",
-                columnNames: ["token"],
-                isUnique: true,
-            })
-        );
-
         await queryRunner.createForeignKey(
-            "password_reset_tokens",
+            "refresh_tokens",
             new TableForeignKey({
-                name: "FK_PASSWORD_RESET_USER",
                 columnNames: ["userId"],
                 referencedColumnNames: ["id"],
                 referencedTableName: "users",
@@ -64,8 +61,15 @@ export class AddPasswordResetTokens1689924000002 implements MigrationInterface {
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.dropForeignKey("password_reset_tokens", "FK_PASSWORD_RESET_USER");
-        await queryRunner.dropIndex("password_reset_tokens", "IDX_PASSWORD_RESET_TOKEN");
-        await queryRunner.dropTable("password_reset_tokens");
+        const table = await queryRunner.getTable("refresh_tokens");
+        if (table) {
+            const foreignKey = table.foreignKeys.find(
+                (fk) => fk.columnNames.indexOf("userId") !== -1
+            );
+            if (foreignKey) {
+                await queryRunner.dropForeignKey("refresh_tokens", foreignKey);
+            }
+        }
+        await queryRunner.dropTable("refresh_tokens");
     }
 }
