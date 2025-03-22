@@ -43,7 +43,7 @@ export class AddPasswordResetTokens1689924000002 implements MigrationInterface {
         );
 
         await queryRunner.createIndex(
-            "password_reset_tokens",
+            "password_reset_token",
             new TableIndex({
                 name: "IDX_PASSWORD_RESET_TOKEN",
                 columnNames: ["token"],
@@ -52,7 +52,7 @@ export class AddPasswordResetTokens1689924000002 implements MigrationInterface {
         );
 
         await queryRunner.createForeignKey(
-            "password_reset_tokens",
+            "password_reset_token",
             new TableForeignKey({
                 name: "FK_PASSWORD_RESET_USER",
                 columnNames: ["userId"],
@@ -64,8 +64,8 @@ export class AddPasswordResetTokens1689924000002 implements MigrationInterface {
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.dropForeignKey("password_reset_tokens", "FK_PASSWORD_RESET_USER");
-        await queryRunner.dropIndex("password_reset_tokens", "IDX_PASSWORD_RESET_TOKEN");
-        await queryRunner.dropTable("password_reset_tokens");
+        await queryRunner.dropForeignKey("password_reset_token", "FK_PASSWORD_RESET_USER");
+        await queryRunner.dropIndex("password_reset_token", "IDX_PASSWORD_RESET_TOKEN");
+        await queryRunner.dropTable("password_reset_token");
     }
 }

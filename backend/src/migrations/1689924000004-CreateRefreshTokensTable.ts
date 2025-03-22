@@ -50,7 +50,7 @@ export class CreateRefreshTokensTable1689924000004 implements MigrationInterface
         );
 
         await queryRunner.createForeignKey(
-            "refresh_tokens",
+            "refresh_token",
             new TableForeignKey({
                 columnNames: ["userId"],
                 referencedColumnNames: ["id"],
@@ -61,15 +61,15 @@ export class CreateRefreshTokensTable1689924000004 implements MigrationInterface
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        const table = await queryRunner.getTable("refresh_tokens");
+        const table = await queryRunner.getTable("refresh_token");
         if (table) {
             const foreignKey = table.foreignKeys.find(
                 (fk) => fk.columnNames.indexOf("userId") !== -1
             );
             if (foreignKey) {
-                await queryRunner.dropForeignKey("refresh_tokens", foreignKey);
+                await queryRunner.dropForeignKey("refresh_token", foreignKey);
             }
         }
-        await queryRunner.dropTable("refresh_tokens");
+        await queryRunner.dropTable("refresh_token");
     }
 }
