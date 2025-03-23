@@ -8,6 +8,7 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import Team from './pages/Team';
 import VerifyEmail from './pages/VerifyEmail';
 import VerifyPending from './pages/VerifyPending';
 import ForgotPassword from './pages/ForgotPassword';
@@ -51,6 +52,16 @@ const App = () => {
                 <PrivateRoute>
                   <RootLayout>
                     <Profile />
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/team"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
+                    <Team />
                   </RootLayout>
                 </PrivateRoute>
               }

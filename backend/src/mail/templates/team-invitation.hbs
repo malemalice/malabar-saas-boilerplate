@@ -1,0 +1,16 @@
+<p>Hello,</p>
+
+<p>You have been invited to join the team by {{ inviterName }}.</p>
+
+{{#if isExistingUser}}
+<p>Please click the button below to accept or reject the invitation:</p>
+<a href="{{ acceptUrl }}" style="display: inline-block; padding: 10px 20px; margin: 10px 5px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Accept Invitation</a>
+<a href="{{ rejectUrl }}" style="display: inline-block; padding: 10px 20px; margin: 10px 5px; background-color: #f44336; color: white; text-decoration: none; border-radius: 5px;">Reject Invitation</a>
+{{else}}
+<p>To join the team, you'll need to create an account first. Click the button below to sign up:</p>
+<a href="{{ signupUrl }}" style="display: inline-block; padding: 10px 20px; margin: 10px 5px; background-color: #2196F3; color: white; text-decoration: none; border-radius: 5px;">Sign Up & Join Team</a>
+{{/if}}
+
+<p>This invitation will expire in 30 days.</p>
+
+<p>Best regards,<br>Quiz App Team</p>

@@ -65,19 +65,8 @@ export class TeamController {
         @Request() req,
         @Param('teamId') teamId: string,
         @Param('userId') userId: string,
-    ): Promise<TeamResponseDto> {
-        const team = await this.teamService.removeMember(teamId, userId);
-        return {
-            id: team.id,
-            name: team.name,
-            ownerId: team.ownerId,
-            createdAt: team.createdAt,
-            members: team.members.map(member => ({
-                id: member.id,
-                name: member.name,
-                email: member.email,
-            })),
-        };
+    ): Promise<void> {
+        await this.teamService.removeMember(teamId, userId);
     }
 
     @Delete(':teamId')

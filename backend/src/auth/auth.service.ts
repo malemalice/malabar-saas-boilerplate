@@ -29,9 +29,9 @@ export class AuthService {
     private passwordResetRateLimitRepo: Repository<PasswordResetRateLimit>,
     @InjectRepository(RefreshToken)
     private refreshTokenRepo: Repository<RefreshToken>,
-  ) {}
+  ) { }
 
-  async signup(email: string, password: string, name: string) {
+  async signup(email: string, password: string, name: string, invitationToken?: string) {
     const existingUser = await this.userService.findByEmail(email);
     if (existingUser) {
       throw new ConflictException('Email already exists');
@@ -44,14 +44,21 @@ export class AuthService {
       name,
     });
 
-    // Create a team for the new user with their name as team name
-    const team = await this.teamService.createTeam(name, user.id);
-    await this.teamService.addMember(team.id, user.id);
+    if (invitationToken) {
+      // If user is signing up through an invitation, accept it
+      await this.teamService.acceptInvitation(null, user.id, invitationToken);
+    } else {
+      // Create a team for the new user with their name as team name
+      const team = await this.teamService.createTeam(name, user.id);
+      await this.teamService.addMember(team.id, user.id);
+    }
+
     const accessToken = this.generateAccessToken(user.id);
     const refreshToken = await this.generateRefreshToken(user.id);
     await this.sendVerificationEmail(user);
     return { user, accessToken, refreshToken };
   }
+
 
   async login(email: string, password: string) {
     const user = await this.userService.findByEmail(email);
@@ -183,7 +190,7 @@ export class AuthService {
   private calculateCooldown(attemptCount: number): number {
     // Base cooldown of 15 minutes
     const baseCooldown = 15 * 60 * 1000; // 15 minutes in milliseconds
-    
+
     // Exponential backoff: doubles the cooldown for each attempt
     return baseCooldown * Math.pow(2, attemptCount - 1);
   }
