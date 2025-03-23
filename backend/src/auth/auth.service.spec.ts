@@ -35,6 +35,7 @@ describe('AuthService', () => {
     createdAt: new Date(),
     updatedAt: new Date(),
     verificationTokens: [],
+    teams: null,
   };
 
   beforeEach(async () => {

@@ -1,6 +1,7 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, ManyToMany } from 'typeorm';
 import { Exclude } from 'class-transformer';
 import { VerificationToken } from '../auth/entities/verification-token.entity';
+import { Team } from '../team/team.entity';
 
 @Entity('users')
 export class User {
@@ -28,4 +29,7 @@ export class User {
 
   @OneToMany(() => VerificationToken, token => token.user)
   verificationTokens: VerificationToken[];
+
+  @ManyToMany(() => Team, team => team.members)
+  teams: Team[];
 }

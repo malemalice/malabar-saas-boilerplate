@@ -4,6 +4,7 @@ import { ConfigService } from '@nestjs/config';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';
 import { UserService } from '../user/user.service';
+import { TeamService } from '../team/team.service';
 import { VerificationToken } from './entities/verification-token.entity';
 import { PasswordResetToken } from './entities/password-reset-token.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -16,6 +17,7 @@ import { RefreshToken } from './entities/refresh-token.entity';
 export class AuthService {
   constructor(
     private userService: UserService,
+    private teamService: TeamService,
     private jwtService: JwtService,
     private configService: ConfigService,
     private mailerService: MailerService,
@@ -42,6 +44,9 @@ export class AuthService {
       name,
     });
 
+    // Create a team for the new user with their name as team name
+    const team = await this.teamService.createTeam(name, user.id);
+    await this.teamService.addMember(team.id, user.id);
     const accessToken = this.generateAccessToken(user.id);
     const refreshToken = await this.generateRefreshToken(user.id);
     await this.sendVerificationEmail(user);
