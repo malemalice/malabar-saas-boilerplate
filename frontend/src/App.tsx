@@ -1,51 +1,78 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import PublicRoute from './components/auth/PublicRoute';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ThemeProvider, CssBaseline } from '@mui/material';
-import { theme } from './theme';
+
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { TeamProvider } from './contexts/TeamContext';
+import RootLayout from './components/layout/root-layout';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
 import Profile from './pages/Profile';
+import Team from './pages/Team';
+import VerifyEmail from './pages/VerifyEmail';
+import VerifyPending from './pages/VerifyPending';
+import ForgotPassword from './pages/ForgotPassword';
+import ResetPassword from './pages/ResetPassword';
 
 const queryClient = new QueryClient();
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
 
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <AuthProvider>
+      <AuthProvider>
+        <TeamProvider>
           <Router>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<SignUp />} />
-              <Route
-                path="/dashboard"
-                element={
-                  <PrivateRoute>
+          <Routes>
+            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
+            <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
+            <Route path="/verify-email" element={<VerifyEmail />} />
+            <Route path="/verify-pending" element={<VerifyPending />} />
+            <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+            <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
                     <Dashboard />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <PrivateRoute>
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
                     <Profile />
-                  </PrivateRoute>
-                }
-              />
-              <Route path="/" element={<Navigate to="/login" />} />
-            </Routes>
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/team"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
+                    <Team />
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
+            <Route path="/" element={<Navigate to="/login" />} />
+          </Routes>
           </Router>
-        </AuthProvider>
-      </ThemeProvider>
+        </TeamProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 };

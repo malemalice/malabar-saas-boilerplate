@@ -5,6 +5,7 @@ interface User {
   id: string;
   email: string;
   name: string;
+  isVerified: boolean;
 }
 
 interface AuthContextType {
@@ -15,6 +16,7 @@ interface AuthContextType {
   signup: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
   updateProfile: (data: Partial<User>) => Promise<void>;
+  resendVerification: () => Promise<{ message: string; nextResendTime: Date }>;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -32,9 +34,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
       fetchUser();
     } else {
       setIsLoading(false);
@@ -55,20 +57,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const login = async (email: string, password: string) => {
     const { data } = await axios.post('/api/auth/login', { email, password });
-    localStorage.setItem('token', data.token);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+    localStorage.setItem('accessToken', data.accessToken);
+    localStorage.setItem('refreshToken', data.refreshToken);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
     await fetchUser();
   };
 
   const signup = async (email: string, password: string, name: string) => {
     const { data } = await axios.post('/api/auth/signup', { email, password, name });
-    localStorage.setItem('token', data.token);
-    axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+    localStorage.setItem('accessToken', data.accessToken);
+    localStorage.setItem('refreshToken', data.refreshToken);
+    axios.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
     await fetchUser();
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
   };
@@ -76,6 +81,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const updateProfile = async (data: Partial<User>) => {
     const { data: updatedUser } = await axios.patch('/api/auth/profile', data);
     setUser(updatedUser);
+  };
+
+  const [lastVerificationTime, setLastVerificationTime] = useState<Date | null>(null);
+
+  const resendVerification = async () => {
+    const now = new Date();
+    if (lastVerificationTime) {
+      const timeDiff = (now.getTime() - lastVerificationTime.getTime()) / 1000;
+      if (timeDiff < 300) { // 5 minutes in seconds
+        const nextResendTime = new Date(lastVerificationTime.getTime() + 300000);
+        const error = new Error('Please wait before requesting another verification email');
+        Object.assign(error, {
+          response: {
+            data: {
+              message: 'Please wait before requesting another verification email',
+              nextResendTime
+            }
+          }
+        });
+        throw error;
+      }
+    }
+
+    const { data } = await axios.post('/api/auth/resend-verification', {
+      email: user?.email
+    });
+    setLastVerificationTime(now);
+    return data;
   };
 
   return (
@@ -88,6 +121,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         signup,
         logout,
         updateProfile,
+        resendVerification,
       }}
     >
       {children}
