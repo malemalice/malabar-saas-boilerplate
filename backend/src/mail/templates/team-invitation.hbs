@@ -1,16 +1,26 @@
-<p>Hello,</p>
-
-<p>You have been invited to join the team by {{ inviterName }}.</p>
-
-{{#if isExistingUser}}
-<p>Please click the button below to accept or reject the invitation:</p>
-<a href="{{ acceptUrl }}" style="display: inline-block; padding: 10px 20px; margin: 10px 5px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Accept Invitation</a>
-<a href="{{ rejectUrl }}" style="display: inline-block; padding: 10px 20px; margin: 10px 5px; background-color: #f44336; color: white; text-decoration: none; border-radius: 5px;">Reject Invitation</a>
-{{else}}
-<p>To join the team, you'll need to create an account first. Click the button below to sign up:</p>
-<a href="{{ signupUrl }}" style="display: inline-block; padding: 10px 20px; margin: 10px 5px; background-color: #2196F3; color: white; text-decoration: none; border-radius: 5px;">Sign Up & Join Team</a>
-{{/if}}
-
-<p>This invitation will expire in 30 days.</p>
-
-<p>Best regards,<br>Quiz App Team</p>
+<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h2 style="color: #333;">Team Invitation</h2>
+  
+  <p>Hello,</p>
+  
+  <p>You have been invited to join the team by {{ inviterName }}.</p>
+  
+  {{#if isExistingUser}}
+  <p>Please click the button below to accept or reject the invitation:</p>
+  
+  <p style="margin: 20px 0;">
+    <a href="{{ acceptUrl }}" style="display: inline-block; padding: 10px 20px; margin: 10px 5px; background-color: #4CAF50; color: white; text-decoration: none; border-radius: 5px;">Accept Invitation</a>
+    <a href="{{ rejectUrl }}" style="display: inline-block; padding: 10px 20px; margin: 10px 5px; background-color: #f44336; color: white; text-decoration: none; border-radius: 5px;">Reject Invitation</a>
+  </p>
+  {{else}}
+  <p>To join the team, you'll need to create an account first. Click the button below to sign up:</p>
+  
+  <p style="margin: 20px 0;">
+    <a href="{{ signupUrl }}" style="display: inline-block; padding: 10px 20px; margin: 10px 5px; background-color: #2196F3; color: white; text-decoration: none; border-radius: 5px;">Sign Up & Join Team</a>
+  </p>
+  {{/if}}
+  
+  <p style="color: #666; font-size: 14px; margin-top: 30px;">This invitation will expire in 30 days.</p>
+  
+  <p style="color: #666; font-size: 14px;">Best regards,<br>Quiz App Team</p>
+</div>

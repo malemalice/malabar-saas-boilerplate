@@ -3,6 +3,7 @@ import PublicRoute from './components/auth/PublicRoute';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { TeamProvider } from './contexts/TeamContext';
 import RootLayout from './components/layout/root-layout';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
@@ -28,7 +29,8 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router>
+        <TeamProvider>
+          <Router>
           <Routes>
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
@@ -68,7 +70,8 @@ const App = () => {
             />
             <Route path="/" element={<Navigate to="/login" />} />
           </Routes>
-        </Router>
+          </Router>
+        </TeamProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

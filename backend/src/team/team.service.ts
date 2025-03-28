@@ -106,18 +106,33 @@ export class TeamService {
             this.userService.findById(inviterId)
         ]);
         let user = await this.userService.findByEmail(email).catch(() => null);
+        
+        if (user) {
+            // Check for existing invitation for registered users
+            const existingUserTeam = await this.userTeamRepository.findOne({
+                where: {
+                    teamId,
+                    userId: user.id,
+                    status: UserTeamStatus.INVITING,
+                },
+            });
 
-        // Check for existing invitation
-        const existingInvite = await this.userTeamRepository.findOne({
-            where: {
-                teamId,
-                ...(user ? { userId: user.id } : {}),
-                status: UserTeamStatus.INVITING,
-            },
-        });
+            if (existingUserTeam) {
+                throw new ConflictException('User is already invited to this team');
+            }
+        } else {
+            // Check for existing invitation for non-registered users
+            const existingInvitation = await this.teamInvitationRepository.findOne({
+                where: {
+                    teamId,
+                    email,
+                    status: TeamInvitationStatus.PENDING,
+                },
+            });
 
-        if (existingInvite) {
-            throw new ConflictException('User is already invited to this team');
+            if (existingInvitation) {
+                throw new ConflictException('This email is already invited to this team');
+            }
         }
 
         const frontendUrl = this.configService.get('FRONTEND_URL');

@@ -46,3 +46,9 @@ export class TeamMemberDto {
     @IsString()
     email: string;
 }
+
+export class InviteTeamMemberDto {
+    @ApiProperty({ description: 'The email address of the user to invite', example: 'user@example.com' })
+    @IsString()
+    email: string;
+}

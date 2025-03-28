@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Pencil, Trash2 } from 'lucide-react';
+import { useTeam } from '@/contexts/TeamContext';
+import { InviteTeamModal } from '@/components/modals/InviteTeamModal';
 
 interface TeamMember {
   id: string;
@@ -11,22 +11,25 @@ interface TeamMember {
 }
 
 const Team = () => {
-  const [members, setMembers] = useState<TeamMember[]>([
-    {
-      id: '1',
-      name: 'John Doe',
-      email: 'user@example.com',
-      role: 'Owner',
-      status: 'Active',
-    },
-    {
-      id: '2',
-      name: 'Cena Mon',
-      email: 'cena@example.com',
-      role: 'Admin',
-      status: 'Active',
-    },
-  ]);
+  const { members, loading, error } = useTeam();
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-8 px-4 flex items-center justify-center">
+        <div className="text-gray-500">Loading team members...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container mx-auto py-8 px-4">
+        <div className="text-red-500">{error}</div>
+      </div>
+    );
+  }
+
+
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -35,9 +38,7 @@ const Team = () => {
           <h1 className="text-2xl font-bold">Team</h1>
           <p className="text-sm text-gray-500">Manage your team access</p>
         </div>
-        <Button variant="outline" className="text-blue-500 border-blue-500">
-          Invite
-        </Button>
+        <InviteTeamModal />
       </div>
 
       <div className="bg-white rounded-lg shadow overflow-hidden">
@@ -79,7 +80,11 @@ const Team = () => {
                   <button className="text-blue-500 hover:text-blue-700 mr-4">
                     <Pencil className="h-4 w-4" />
                   </button>
-                  <button className="text-red-500 hover:text-red-700">
+                  <button 
+                    className="text-red-500 hover:text-red-700"
+                    disabled={member.role === 'Owner'}
+                    style={{ opacity: member.role === 'Owner' ? 0.5 : 1 }}
+                  >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 </td>

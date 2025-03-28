@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TeamService } from './team.service';
-import { CreateTeamDto, AddTeamMemberDto, TeamResponseDto } from './dto/team.dto';
+import { CreateTeamDto, AddTeamMemberDto, TeamResponseDto, InviteTeamMemberDto } from './dto/team.dto';
 
 @Controller('teams')
 @UseGuards(JwtAuthGuard)
@@ -47,6 +47,27 @@ export class TeamController {
         @Body() addMemberDto: AddTeamMemberDto,
     ): Promise<TeamResponseDto> {
         const team = await this.teamService.addMember(teamId, addMemberDto.userId);
+        return {
+            id: team.id,
+            name: team.name,
+            ownerId: team.ownerId,
+            createdAt: team.createdAt,
+            members: team.members.map(member => ({
+                id: member.id,
+                name: member.name,
+                email: member.email,
+            })),
+        };
+    }
+
+    @Post(':teamId/invite')
+    async inviteMember(
+        @Request() req,
+        @Param('teamId') teamId: string,
+        @Body() inviteDto: InviteTeamMemberDto,
+    ): Promise<TeamResponseDto> {
+        const result = await this.teamService.inviteMember(teamId, inviteDto.email, req.user.id);
+        const team = await this.teamService.findById(teamId);
         return {
             id: team.id,
             name: team.name,
