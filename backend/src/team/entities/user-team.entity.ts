@@ -1,17 +1,15 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, JoinColumn } from 'typeorm';
+import { Entity, PrimaryColumn, Column, ManyToOne, CreateDateColumn, JoinColumn } from 'typeorm';
 import { User } from '../../user/user.entity';
 import { Team } from '../team.entity';
+import { Role } from '../../role/role.entity';
 import { UserTeamStatus } from '../enums/user-team-status.enum';
 
 @Entity('user_teams')
 export class UserTeam {
-    @PrimaryGeneratedColumn('uuid')
-    id: string;
-
-    @Column({ name: 'userId' })
+    @PrimaryColumn('uuid')
     userId: string;
 
-    @Column({ name: 'teamId' })
+    @PrimaryColumn('uuid')
     teamId: string;
 
     @Column({
@@ -28,6 +26,13 @@ export class UserTeam {
     @ManyToOne(() => Team, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'teamId' })
     team: Team;
+
+    @Column({ type: 'uuid', nullable: true }) // Temporarily make it nullable
+    roleId: string;
+
+    @ManyToOne(() => Role, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'roleId' })
+    role: Role;
 
     @CreateDateColumn()
     createdAt: Date;

@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn } from 'typeorm';
 
-@Entity()
+@Entity('password_reset_rate_limits')
 export class PasswordResetRateLimit {
   @PrimaryGeneratedColumn('uuid')
   id: string;

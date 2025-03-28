@@ -11,6 +11,8 @@ import { TeamInvitation } from './entities/team-invitation.entity';
 import { TeamInvitationStatus } from './entities/team-invitation.entity';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
+import { RoleType } from 'src/role/role.entity';
+import { RoleService } from 'src/role/role.service';
 
 @Injectable()
 export class TeamService {
@@ -22,6 +24,7 @@ export class TeamService {
         @InjectRepository(TeamInvitation)
         private teamInvitationRepository: Repository<TeamInvitation>,
         private userService: UserService,
+        private roleService: RoleService,
         private mailerService: MailerService,
         private configService: ConfigService,
     ) {}
@@ -31,7 +34,25 @@ export class TeamService {
             name,
             ownerId,
         });
-        return this.teamRepository.save(team);
+        const savedTeam = await this.teamRepository.save(team);
+        
+        // Remove console.log
+        const ownerRole = await this.roleService.findByName(RoleType.OWNER);
+        
+        // Make sure ownerRole exists and has an id
+        if (!ownerRole || !ownerRole.id) {
+            throw new Error('Owner role not found');
+        }
+    
+        const userTeam = this.userTeamRepository.create({
+            teamId: savedTeam.id,
+            userId: ownerId,
+            roleId: ownerRole.id,  // Make sure this is set
+            status: UserTeamStatus.ACTIVE,
+        });
+        await this.userTeamRepository.save(userTeam);
+        
+        return savedTeam;
     }
 
     async findById(id: string): Promise<Team> {
@@ -56,15 +77,24 @@ export class TeamService {
         return team;
     }
 
-    async addMember(teamId: string, userId: string): Promise<Team> {
-        const [team, user] = await Promise.all([
+    async addMember(teamId: string, userId: string, roleName: RoleType = RoleType.MEMBER): Promise<Team> {
+        const [team, user, role] = await Promise.all([
             this.findById(teamId),
             this.userService.findById(userId),
+            this.roleService.findByName(roleName),
         ]);
 
         if (team.members.some(member => member.id === userId)) {
             throw new ConflictException('User is already a member of this team');
         }
+
+        const userTeam = this.userTeamRepository.create({
+            teamId,
+            userId,
+            roleId: role.id,
+            status: UserTeamStatus.ACTIVE,
+        });
+        await this.userTeamRepository.save(userTeam);
 
         team.members = [...team.members, user];
         return this.teamRepository.save(team);
@@ -144,6 +174,8 @@ export class TeamService {
     }
 
     async acceptInvitation(teamId: string, userId: string, token?: string): Promise<UserTeam> {
+        const memberRole = await this.roleService.findByName(RoleType.MEMBER);
+
         if (token) {
             // Handle token-based invitation for non-existing users
             const invitation = await this.teamInvitationRepository.findOne({
@@ -162,6 +194,7 @@ export class TeamService {
             const userTeam = this.userTeamRepository.create({
                 teamId,
                 userId,
+                roleId: memberRole.id,
                 status: UserTeamStatus.ACTIVE,
             });
 
@@ -187,6 +220,7 @@ export class TeamService {
         }
 
         userTeam.status = UserTeamStatus.ACTIVE;
+        userTeam.roleId = memberRole.id;
         return this.userTeamRepository.save(userTeam);
     }
 
