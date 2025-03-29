@@ -6,8 +6,9 @@ import { Team } from '../../src/team/team.entity';
 import { UserTeam } from '../../src/team/entities/user-team.entity';
 import { Repository, DataSource } from 'typeorm';
 import { UserTeamStatus } from '../../src/team/enums/user-team-status.enum';
-import { RoleType } from 'src/role/role.entity';
 import { app } from '../setup';
+import { seedRoles } from '../utils/seed-roles';
+import { RoleType } from 'src/role/role.entity';
 
 describe('Team Creation during Signup (e2e)', () => {
   let userRepository: Repository<User>;
@@ -26,6 +27,8 @@ describe('Team Creation during Signup (e2e)', () => {
   beforeEach(async () => {
     // Clear all tables before each test
     await dataSource.synchronize(true);
+    // Seed roles after clearing database
+    await seedRoles(dataSource);
   });
 
   describe('POST /auth/signup', () => {
@@ -49,7 +52,7 @@ describe('Team Creation during Signup (e2e)', () => {
       expect(user).toBeDefined();
 
       const team = await teamRepository.findOne({
-        where: { name: newUser.email }
+        where: { ownerId: user.id }
       });
 
       expect(team).toBeDefined();
