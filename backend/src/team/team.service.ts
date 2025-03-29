@@ -16,6 +16,18 @@ import { RoleService } from 'src/role/role.service';
 
 @Injectable()
 export class TeamService {
+    async findInvitationByToken(token: string) {
+        const invitation = await this.teamInvitationRepository.findOne({
+            where: {
+                token,
+                status: TeamInvitationStatus.PENDING,
+            },
+        });
+        if (!invitation) {
+            throw new NotFoundException('Invitation not found or expired');
+        }
+        return invitation;
+    }
     constructor(
         @InjectRepository(Team)
         private teamRepository: Repository<Team>,
@@ -77,7 +89,7 @@ export class TeamService {
         return team;
     }
 
-    async addMember(teamId: string, userId: string, roleName: RoleType = RoleType.MEMBER): Promise<Team> {
+    async addMember(teamId: string, userId: string, roleName: RoleType = RoleType.BILLING): Promise<Team> {
         const [team, user, role] = await Promise.all([
             this.findById(teamId),
             this.userService.findById(userId),
@@ -189,7 +201,7 @@ export class TeamService {
     }
 
     async acceptInvitation(teamId: string, userId: string, token?: string): Promise<UserTeam> {
-        const memberRole = await this.roleService.findByName(RoleType.MEMBER);
+        const memberRole = await this.roleService.findByName(RoleType.BILLING);
 
         if (token) {
             // Handle token-based invitation for non-existing users

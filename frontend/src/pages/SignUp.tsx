@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useNavigate, Link as RouterLink, useSearchParams } from 'react-router-dom';
+import axios from 'axios';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -32,6 +33,27 @@ const SignUp = () => {
   const { signup } = useAuth();
   const navigate = useNavigate();
   const [error, setError] = useState('');
+  const [searchParams] = useSearchParams();
+  const [isLoading, setIsLoading] = useState(false);
+  const token = searchParams.get('token');
+  useEffect(() => {
+    const fetchInvitationDetails = async () => {
+      if (!token) return;
+      
+      try {
+        setIsLoading(true);
+        const { data } = await axios.get(`/api/teams/invitations/${token}`);
+        form.setValue('email', data.email);
+      } catch (err: any) {
+        setError(err.response?.data?.message || 'Invalid or expired invitation');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInvitationDetails();
+  }, [token]);
+
   const form = useForm<SignUpForm>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -96,6 +118,7 @@ const SignUp = () => {
                       placeholder="Enter your email"
                       type="email"
                       autoComplete="email"
+                      disabled={!!token}
                       {...field}
                     />
                   </FormControl>

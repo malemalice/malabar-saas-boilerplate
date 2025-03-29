@@ -4,8 +4,16 @@ import { TeamService } from './team.service';
 import { CreateTeamDto, AddTeamMemberDto, TeamResponseDto, InviteTeamMemberDto } from './dto/team.dto';
 
 @Controller('teams')
-@UseGuards(JwtAuthGuard)
 export class TeamController {
+    @Get('invitations/:token')
+    async getInvitationByToken(@Param('token') token: string) {
+        const invitation = await this.teamService.findInvitationByToken(token);
+        return {
+            email: invitation.email,
+            teamId: invitation.teamId,
+            status: invitation.status,
+        };
+    }
     constructor(private readonly teamService: TeamService) {}
 
     @Get('my-team')
