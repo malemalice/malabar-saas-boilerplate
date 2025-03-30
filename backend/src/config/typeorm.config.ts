@@ -1,8 +1,12 @@
 import { DataSource } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { config } from 'dotenv';
+import { join } from 'path';
 
-config();
+// Load the main .env file if not already loaded
+if (!process.env.DB_HOST) {
+  config();
+}
 
 const configService = new ConfigService();
 

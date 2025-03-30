@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsUUID } from 'class-validator';
+import { RoleType } from 'src/role/role.entity';
 
 export class CreateTeamDto {
     @ApiProperty({ description: 'The team\'s name', example: 'Engineering Team' })
@@ -51,4 +52,8 @@ export class InviteTeamMemberDto {
     @ApiProperty({ description: 'The email address of the user to invite', example: 'user@example.com' })
     @IsString()
     email: string;
+
+    @ApiProperty({ description: 'The role to assign to the invited user', example: 'admin', enum: ['admin', 'billing'], default: 'admin' })
+    @IsString()
+    role?: string = RoleType.ADMIN;
 }

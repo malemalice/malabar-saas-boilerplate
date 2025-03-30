@@ -3,7 +3,7 @@ import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn } from 'typeor
 export enum RoleType {
     OWNER = 'owner',
     ADMIN = 'admin',
-    MEMBER = 'member',
+    BILLING = 'billing',
 }
 
 @Entity('roles')
@@ -14,7 +14,7 @@ export class Role {
     @Column({
         type: 'enum',
         enum: RoleType,
-        default: RoleType.MEMBER,
+        default: RoleType.BILLING,
     })
     name: RoleType;
 

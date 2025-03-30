@@ -16,6 +16,18 @@ import { RoleService } from 'src/role/role.service';
 
 @Injectable()
 export class TeamService {
+    async findInvitationByToken(token: string) {
+        const invitation = await this.teamInvitationRepository.findOne({
+            where: {
+                token,
+                status: TeamInvitationStatus.PENDING,
+            },
+        });
+        if (!invitation) {
+            throw new NotFoundException('Invitation not found or expired');
+        }
+        return invitation;
+    }
     constructor(
         @InjectRepository(Team)
         private teamRepository: Repository<Team>,
@@ -77,7 +89,7 @@ export class TeamService {
         return team;
     }
 
-    async addMember(teamId: string, userId: string, roleName: RoleType = RoleType.MEMBER): Promise<Team> {
+    async addMember(teamId: string, userId: string, roleName: RoleType = RoleType.BILLING): Promise<Team> {
         const [team, user, role] = await Promise.all([
             this.findById(teamId),
             this.userService.findById(userId),
@@ -100,10 +112,11 @@ export class TeamService {
         return this.teamRepository.save(team);
     }
 
-    async inviteMember(teamId: string, email: string, inviterId: string): Promise<UserTeam | TeamInvitation> {
-        const [team, inviter] = await Promise.all([
+    async inviteMember(teamId: string, email: string, inviterId: string, roleName: RoleType = RoleType.ADMIN): Promise<UserTeam | TeamInvitation> {
+        const [team, inviter, role] = await Promise.all([
             this.findById(teamId),
-            this.userService.findById(inviterId)
+            this.userService.findById(inviterId),
+            this.roleService.findByName(roleName)
         ]);
         let user = await this.userService.findByEmail(email).catch(() => null);
         
@@ -142,6 +155,7 @@ export class TeamService {
             const userTeam = this.userTeamRepository.create({
                 teamId,
                 userId: user.id,
+                roleId: role.id,
                 status: UserTeamStatus.INVITING,
             });
             await this.userTeamRepository.save(userTeam);
@@ -168,6 +182,7 @@ export class TeamService {
                 inviterId,
                 email,
                 token,
+                roleId: role.id,
                 status: TeamInvitationStatus.PENDING,
             });
             await this.teamInvitationRepository.save(teamInvitation);
@@ -189,7 +204,7 @@ export class TeamService {
     }
 
     async acceptInvitation(teamId: string, userId: string, token?: string): Promise<UserTeam> {
-        const memberRole = await this.roleService.findByName(RoleType.MEMBER);
+        const memberRole = await this.roleService.findByName(RoleType.BILLING);
 
         if (token) {
             // Handle token-based invitation for non-existing users

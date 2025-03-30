@@ -22,14 +22,13 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   if (isLoading) {
     return <div>Loading...</div>;
   }
-  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
+  return isAuthenticated ? <TeamProvider>{children}</TeamProvider> : <Navigate to="/login" />;
 };
 
 const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <TeamProvider>
           <Router>
           <Routes>
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
@@ -71,7 +70,6 @@ const App = () => {
             <Route path="/" element={<Navigate to="/login" />} />
           </Routes>
           </Router>
-        </TeamProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

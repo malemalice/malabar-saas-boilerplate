@@ -9,10 +9,14 @@ const PublicRoute = ({ children }: PublicRouteProps) => {
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
-  return isAuthenticated ? <Navigate to="/dashboard" /> : <>{children}</>;
+  if (isAuthenticated) {
+    return <Navigate to="/dashboard" replace />;
+  }
+
+  return <>{children}</>;
 };
 
 export default PublicRoute;

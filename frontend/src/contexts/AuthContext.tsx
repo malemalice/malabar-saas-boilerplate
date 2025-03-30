@@ -72,10 +72,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const logout = () => {
+    setIsLoading(true);
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
     delete axios.defaults.headers.common['Authorization'];
     setUser(null);
+    setIsLoading(false);
   };
 
   const updateProfile = async (data: Partial<User>) => {
