@@ -28,6 +28,9 @@ export class TeamInvitation {
     @Column({ unique: true })
     email: string;
 
+    @Column({ name: 'role_id' })
+    roleId: string;
+
     @Column({
         type: 'enum',
         enum: TeamInvitationStatus,

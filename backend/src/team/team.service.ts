@@ -112,10 +112,11 @@ export class TeamService {
         return this.teamRepository.save(team);
     }
 
-    async inviteMember(teamId: string, email: string, inviterId: string): Promise<UserTeam | TeamInvitation> {
-        const [team, inviter] = await Promise.all([
+    async inviteMember(teamId: string, email: string, inviterId: string, roleName: RoleType = RoleType.ADMIN): Promise<UserTeam | TeamInvitation> {
+        const [team, inviter, role] = await Promise.all([
             this.findById(teamId),
-            this.userService.findById(inviterId)
+            this.userService.findById(inviterId),
+            this.roleService.findByName(roleName)
         ]);
         let user = await this.userService.findByEmail(email).catch(() => null);
         
@@ -154,6 +155,7 @@ export class TeamService {
             const userTeam = this.userTeamRepository.create({
                 teamId,
                 userId: user.id,
+                roleId: role.id,
                 status: UserTeamStatus.INVITING,
             });
             await this.userTeamRepository.save(userTeam);
@@ -180,6 +182,7 @@ export class TeamService {
                 inviterId,
                 email,
                 token,
+                roleId: role.id,
                 status: TeamInvitationStatus.PENDING,
             });
             await this.teamInvitationRepository.save(teamInvitation);

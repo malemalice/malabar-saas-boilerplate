@@ -2,6 +2,7 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } f
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TeamService } from './team.service';
 import { CreateTeamDto, AddTeamMemberDto, TeamResponseDto, InviteTeamMemberDto } from './dto/team.dto';
+import { RoleType } from 'src/role/role.entity';
 
 @Controller('teams')
 export class TeamController {
@@ -78,7 +79,7 @@ export class TeamController {
         @Param('teamId') teamId: string,
         @Body() inviteDto: InviteTeamMemberDto,
     ): Promise<TeamResponseDto> {
-        const result = await this.teamService.inviteMember(teamId, inviteDto.email, req.user.id);
+        const result = await this.teamService.inviteMember(teamId, inviteDto.email, req.user.id, inviteDto.role as RoleType);
         const team = await this.teamService.findById(teamId);
         return {
             id: team.id,
