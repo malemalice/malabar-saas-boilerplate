@@ -17,6 +17,7 @@ export class TeamController {
     constructor(private readonly teamService: TeamService) {}
 
     @Get('my-team')
+    @UseGuards(JwtAuthGuard)  // Add here to protect all routes in this controller
     async getMyTeam(@Request() req): Promise<TeamResponseDto> {
         const team = await this.teamService.findByOwnerId(req.user.id);
         return {
@@ -33,6 +34,7 @@ export class TeamController {
     }
 
     @Post()
+    @UseGuards(JwtAuthGuard)  // Add here to protect all routes in this controller
     async createTeam(@Request() req, @Body() createTeamDto: CreateTeamDto): Promise<TeamResponseDto> {
         const team = await this.teamService.createTeam(createTeamDto.name, req.user.id);
         return {
@@ -49,6 +51,7 @@ export class TeamController {
     }
 
     @Post(':teamId/members')
+    @UseGuards(JwtAuthGuard)  // Add here to protect all routes in this controller
     async addMember(
         @Request() req,
         @Param('teamId') teamId: string,
@@ -69,6 +72,7 @@ export class TeamController {
     }
 
     @Post(':teamId/invite')
+    @UseGuards(JwtAuthGuard)  // Add here to protect all routes in this controller
     async inviteMember(
         @Request() req,
         @Param('teamId') teamId: string,
@@ -90,6 +94,7 @@ export class TeamController {
     }
 
     @Delete(':teamId/members/:userId')
+    @UseGuards(JwtAuthGuard)  // Add here to protect all routes in this controller
     async removeMember(
         @Request() req,
         @Param('teamId') teamId: string,
@@ -99,6 +104,7 @@ export class TeamController {
     }
 
     @Delete(':teamId')
+    @UseGuards(JwtAuthGuard)  // Add here to protect all routes in this controller
     async deleteTeam(
         @Request() req,
         @Param('teamId') teamId: string,

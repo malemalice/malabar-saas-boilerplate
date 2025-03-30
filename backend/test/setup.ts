@@ -3,6 +3,7 @@ import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../src/app.module';
 import { ConfigModule } from '@nestjs/config';
+import { join } from 'path';
 import testDataSource from './config/test-typeorm.config';
 
 export let app: INestApplication;
@@ -15,6 +16,7 @@ beforeAll(async () => {
   const moduleFixture = await Test.createTestingModule({
     imports: [
       ConfigModule.forRoot({
+        envFilePath: join(__dirname, 'test.env'),
         isGlobal: true
       }),
       AppModule
