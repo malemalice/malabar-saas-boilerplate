@@ -94,6 +94,36 @@ export class TeamController {
         };
     }
 
+    @Post('invitations/:teamId/accept')
+    @UseGuards(JwtAuthGuard)
+    async acceptInvitation(
+        @Request() req,
+        @Param('teamId') teamId: string,
+    ): Promise<TeamResponseDto> {
+        const userTeam = await this.teamService.acceptInvitation(teamId, req.user.id);
+        const team = await this.teamService.findById(teamId);
+        return {
+            id: team.id,
+            name: team.name,
+            ownerId: team.ownerId,
+            createdAt: team.createdAt,
+            members: team.members.map(member => ({
+                id: member.id,
+                name: member.name,
+                email: member.email,
+            })),
+        };
+    }
+
+    @Post('invitations/:teamId/reject')
+    @UseGuards(JwtAuthGuard)
+    async rejectInvitation(
+        @Request() req,
+        @Param('teamId') teamId: string,
+    ): Promise<void> {
+        await this.teamService.rejectInvitation(teamId, req.user.id);
+    }
+
     @Delete(':teamId/members/:userId')
     @UseGuards(JwtAuthGuard)  // Add here to protect all routes in this controller
     async removeMember(

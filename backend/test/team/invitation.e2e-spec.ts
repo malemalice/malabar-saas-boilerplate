@@ -233,6 +233,129 @@ describe('Team Invitation (e2e)', () => {
       });
       expect(invitation).toBeNull();
     });
+
+    it('should accept invitation for signed user', async () => {
+      // First, create an invitation
+      const ownerLoginResponse = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: 'owner@example.com',
+          password: 'password123'
+        });
+
+      const ownerToken = ownerLoginResponse.body.accessToken;
+
+      await request(app.getHttpServer())
+        .post(`/teams/${team.id}/invite`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ email: inviteeUser.email });
+
+      // Now login as invitee and accept the invitation
+      const inviteeLoginResponse = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: 'invitee@example.com',
+          password: 'password123'
+        });
+
+      const inviteeToken = inviteeLoginResponse.body.accessToken;
+
+      const acceptResponse = await request(app.getHttpServer())
+        .post(`/teams/invitations/${team.id}/accept`)
+        .set('Authorization', `Bearer ${inviteeToken}`)
+        .send();
+
+      expect(acceptResponse.status).toBe(201);
+
+      // Verify user-team record is updated
+      const userTeam = await userTeamRepository.findOne({
+        where: { userId: inviteeUser.id, teamId: team.id },
+        relations: ['role']
+      });
+
+      expect(userTeam).toBeDefined();
+      expect(userTeam.status).toBe(UserTeamStatus.ACTIVE);
+      expect(userTeam.role.name).toBe(RoleType.BILLING);
+    });
+
+    it('should reject invitation for signed user', async () => {
+      // First, create an invitation
+      const ownerLoginResponse = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: 'owner@example.com',
+          password: 'password123'
+        });
+
+      const ownerToken = ownerLoginResponse.body.accessToken;
+
+      await request(app.getHttpServer())
+        .post(`/teams/${team.id}/invite`)
+        .set('Authorization', `Bearer ${ownerToken}`)
+        .send({ email: inviteeUser.email });
+
+      // Now login as invitee and reject the invitation
+      const inviteeLoginResponse = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: 'invitee@example.com',
+          password: 'password123'
+        });
+
+      const inviteeToken = inviteeLoginResponse.body.accessToken;
+
+      const rejectResponse = await request(app.getHttpServer())
+        .post(`/teams/invitations/${team.id}/reject`)
+        .set('Authorization', `Bearer ${inviteeToken}`)
+        .send();
+
+      expect(rejectResponse.status).toBe(201);
+
+      // Verify user-team record is updated
+      const userTeam = await userTeamRepository.findOne({
+        where: { userId: inviteeUser.id, teamId: team.id }
+      });
+
+      expect(userTeam).toBeDefined();
+      expect(userTeam.status).toBe(UserTeamStatus.REJECT);
+    });
+
+    it('should create user-team record with default role for signed user', async () => {
+      const loginResponse = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({
+          email: 'owner@example.com',
+          password: 'password123'
+        });
+
+      const token = loginResponse.body.accessToken;
+
+      expect(team.id).toBeDefined();
+      // Send invitation without specifying role (should use default)
+      const response = await request(app.getHttpServer())
+        .post(`/teams/${team.id}/invite`)
+        .set('Authorization', `Bearer ${token}`)
+        .send({ email: inviteeUser.email });
+      expect(response.status).toBe(201);
+
+      // Verify user-team record
+      const userTeam = await userTeamRepository.findOne({
+        where: { userId: inviteeUser.id, teamId: team.id },
+        relations: ['role']
+      });
+
+      expect(userTeam).toBeDefined();
+      expect(userTeam.userId).toBe(inviteeUser.id);
+      expect(userTeam.teamId).toBe(team.id);
+      expect(userTeam.status).toBe(UserTeamStatus.INVITING);
+      expect(userTeam.role.name).toBe(RoleType.ADMIN);
+
+      // Verify no invitation record was created
+      const invitation = await teamInvitationRepository.findOne({
+        where: { email: inviteeUser.email, teamId: team.id }
+      });
+      expect(invitation).toBeNull();
+    });
   });
 
   afterAll(async () => {
