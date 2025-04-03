@@ -5,7 +5,7 @@ interface TeamMember {
   id: string;
   name: string;
   email: string;
-  role: 'Owner' | 'Admin' | 'Member';
+  role: 'Owner' | 'Admin' | 'Billing';
   status: 'Active' | 'Pending' | 'Inactive';
 }
 

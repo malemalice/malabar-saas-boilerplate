@@ -190,7 +190,7 @@ export class TeamService {
             // Send invitation email for non-existing user
             await this.mailerService.sendMail({
                 to: email,
-                subject: `Team Invitation from ${inviter.name}`,
+                subject: `Join Invitation from ${inviter.name}`,
                 template: './team-invitation',
                 context: {
                     inviterName: inviter.name,
@@ -314,6 +314,18 @@ export class TeamService {
             teamId,
             userId,
         });
+    }
+
+    async findTeamsByMemberId(userId: string): Promise<Team[]> {
+        const userTeams = await this.userTeamRepository.find({
+            where: {
+                userId,
+                status: UserTeamStatus.ACTIVE,
+            },
+            relations: ['team', 'team.members'],
+        });
+
+        return userTeams.map(ut => ut.team);
     }
 
     async deleteTeam(teamId: string, userId: string): Promise<void> {

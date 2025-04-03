@@ -1,6 +1,20 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsUUID } from 'class-validator';
+import { IsString, IsUUID, IsEmail, IsEnum } from 'class-validator';
 import { RoleType } from 'src/role/role.entity';
+
+export class TeamInvitationResponseDto {
+    @ApiProperty({ description: 'The email address of the invited user' })
+    @IsEmail()
+    email: string;
+
+    @ApiProperty({ description: 'The team ID the user is invited to' })
+    @IsUUID()
+    teamId: string;
+
+    @ApiProperty({ description: 'The current status of the invitation', enum: ['pending', 'accepted', 'rejected'] })
+    @IsString()
+    status: string;
+}
 
 export class CreateTeamDto {
     @ApiProperty({ description: 'The team\'s name', example: 'Engineering Team' })

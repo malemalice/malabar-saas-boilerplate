@@ -1,13 +1,19 @@
 import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TeamService } from './team.service';
-import { CreateTeamDto, AddTeamMemberDto, TeamResponseDto, InviteTeamMemberDto } from './dto/team.dto';
+import { CreateTeamDto, AddTeamMemberDto, TeamResponseDto, InviteTeamMemberDto, TeamInvitationResponseDto } from './dto/team.dto';
 import { RoleType } from 'src/role/role.entity';
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('teams')
 @Controller('teams')
+@ApiBearerAuth()
 export class TeamController {
+    @ApiOperation({ summary: 'Get invitation details by token' })
+    @ApiResponse({ status: 200, description: 'Returns the invitation details', type: TeamInvitationResponseDto })
+    @ApiResponse({ status: 404, description: 'Invitation not found' })
     @Get('invitations/:token')
-    async getInvitationByToken(@Param('token') token: string) {
+    async getInvitationByToken(@Param('token') token: string): Promise<TeamInvitationResponseDto> {
         const invitation = await this.teamService.findInvitationByToken(token);
         return {
             email: invitation.email,
@@ -17,8 +23,12 @@ export class TeamController {
     }
     constructor(private readonly teamService: TeamService) {}
 
+    @ApiOperation({ summary: 'Get the authenticated user\'s team' })
+    @ApiResponse({ status: 200, description: 'Returns the team details', type: TeamResponseDto })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @ApiResponse({ status: 404, description: 'Team not found' })
     @Get('my-team')
-    @UseGuards(JwtAuthGuard)  // Add here to protect all routes in this controller
+    @UseGuards(JwtAuthGuard)
     async getMyTeam(@Request() req): Promise<TeamResponseDto> {
         const team = await this.teamService.findByOwnerId(req.user.id);
         return {
@@ -34,8 +44,11 @@ export class TeamController {
         };
     }
 
+    @ApiOperation({ summary: 'Create a new team' })
+    @ApiResponse({ status: 201, description: 'Team created successfully', type: TeamResponseDto })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
     @Post()
-    @UseGuards(JwtAuthGuard)  // Add here to protect all routes in this controller
+    @UseGuards(JwtAuthGuard)
     async createTeam(@Request() req, @Body() createTeamDto: CreateTeamDto): Promise<TeamResponseDto> {
         const team = await this.teamService.createTeam(createTeamDto.name, req.user.id);
         return {
@@ -51,8 +64,13 @@ export class TeamController {
         };
     }
 
+    @ApiOperation({ summary: 'Add a member to the team' })
+    @ApiResponse({ status: 200, description: 'Member added successfully', type: TeamResponseDto })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @ApiResponse({ status: 404, description: 'Team or user not found' })
+    @ApiResponse({ status: 409, description: 'User is already a member of this team' })
     @Post(':teamId/members')
-    @UseGuards(JwtAuthGuard)  // Add here to protect all routes in this controller
+    @UseGuards(JwtAuthGuard)
     async addMember(
         @Request() req,
         @Param('teamId') teamId: string,
@@ -72,8 +90,13 @@ export class TeamController {
         };
     }
 
+    @ApiOperation({ summary: 'Invite a user to join the team' })
+    @ApiResponse({ status: 200, description: 'Invitation sent successfully', type: TeamResponseDto })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @ApiResponse({ status: 404, description: 'Team not found' })
+    @ApiResponse({ status: 409, description: 'User is already invited to this team' })
     @Post(':teamId/invite')
-    @UseGuards(JwtAuthGuard)  // Add here to protect all routes in this controller
+    @UseGuards(JwtAuthGuard)
     async inviteMember(
         @Request() req,
         @Param('teamId') teamId: string,
@@ -94,6 +117,10 @@ export class TeamController {
         };
     }
 
+    @ApiOperation({ summary: 'Accept a team invitation' })
+    @ApiResponse({ status: 200, description: 'Invitation accepted successfully', type: TeamResponseDto })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @ApiResponse({ status: 404, description: 'Invitation not found' })
     @Post('invitations/:teamId/accept')
     @UseGuards(JwtAuthGuard)
     async acceptInvitation(
@@ -115,6 +142,10 @@ export class TeamController {
         };
     }
 
+    @ApiOperation({ summary: 'Reject a team invitation' })
+    @ApiResponse({ status: 200, description: 'Invitation rejected successfully' })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @ApiResponse({ status: 404, description: 'Invitation not found' })
     @Post('invitations/:teamId/reject')
     @UseGuards(JwtAuthGuard)
     async rejectInvitation(
@@ -124,8 +155,13 @@ export class TeamController {
         await this.teamService.rejectInvitation(teamId, req.user.id);
     }
 
+    @ApiOperation({ summary: 'Remove a member from the team' })
+    @ApiResponse({ status: 200, description: 'Member removed successfully' })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @ApiResponse({ status: 404, description: 'Team or member not found' })
+    @ApiResponse({ status: 409, description: 'Cannot remove team owner' })
     @Delete(':teamId/members/:userId')
-    @UseGuards(JwtAuthGuard)  // Add here to protect all routes in this controller
+    @UseGuards(JwtAuthGuard)
     async removeMember(
         @Request() req,
         @Param('teamId') teamId: string,
@@ -134,12 +170,37 @@ export class TeamController {
         await this.teamService.removeMember(teamId, userId);
     }
 
+    @ApiOperation({ summary: 'Delete a team' })
+    @ApiResponse({ status: 200, description: 'Team deleted successfully' })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @ApiResponse({ status: 404, description: 'Team not found' })
+    @ApiResponse({ status: 409, description: 'Only team owner can delete the team' })
     @Delete(':teamId')
-    @UseGuards(JwtAuthGuard)  // Add here to protect all routes in this controller
+    @UseGuards(JwtAuthGuard)
     async deleteTeam(
         @Request() req,
         @Param('teamId') teamId: string,
     ): Promise<void> {
         await this.teamService.deleteTeam(teamId, req.user.id);
+    }
+
+    @ApiOperation({ summary: 'Get teams where user is a member' })
+    @ApiResponse({ status: 200, description: 'Returns the list of teams', type: [TeamResponseDto] })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @Get('joined')
+    @UseGuards(JwtAuthGuard)
+    async getJoinedTeams(@Request() req): Promise<TeamResponseDto[]> {
+        const teams = await this.teamService.findTeamsByMemberId(req.user.id);
+        return teams.map(team => ({
+            id: team.id,
+            name: team.name,
+            ownerId: team.ownerId,
+            createdAt: team.createdAt,
+            members: team.members.map(member => ({
+                id: member.id,
+                name: member.name,
+                email: member.email,
+            })),
+        }));
     }
 }
