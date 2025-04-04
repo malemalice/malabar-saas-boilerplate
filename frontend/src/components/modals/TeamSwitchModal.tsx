@@ -6,6 +6,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
 import axios from '@/lib/axios';
 
 interface Team {
@@ -50,11 +51,17 @@ export function TeamSwitchModal({ open, onOpenChange }: TeamSwitchModalProps) {
     }
   };
 
+  const { toast } = useToast();
+
   const handleTeamSelect = (team: Team) => {
     localStorage.setItem('activeTeamId', team.id);
     localStorage.setItem('activeTeamName', team.name);
     onOpenChange(false);
-    window.location.reload(); // Refresh to update team context
+    // window.location.reload(); // Refresh to update team context
+    toast({
+      title: "Team Changed",
+      description: `Successfully switched to team: ${team.name}`,
+    });
   };
 
   return (

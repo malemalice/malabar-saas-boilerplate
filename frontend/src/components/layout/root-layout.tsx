@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { TeamSwitchModal } from '../modals/TeamSwitchModal';
+import { Toaster } from "@/components/ui/toaster";
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, logout } = useAuth();
@@ -119,6 +120,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
       </header>
       <main>{children}</main>
       <TeamSwitchModal open={teamSwitchOpen} onOpenChange={setTeamSwitchOpen} />
+      <Toaster />
     </div>
   );
 };
