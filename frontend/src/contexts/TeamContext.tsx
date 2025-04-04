@@ -13,8 +13,10 @@ interface TeamContextType {
   members: TeamMember[];
   loading: boolean;
   error: string | null;
+  activeTeam: { id: string; name: string } | null;
   fetchMembers: () => Promise<void>;
   inviteMember: (email: string, role: string) => Promise<void>;
+  switchTeam: (teamId: string, teamName: string) => void;
 }
 
 const TeamContext = createContext<TeamContextType | undefined>(undefined);
@@ -23,6 +25,11 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTeam, setActiveTeam] = useState<{ id: string; name: string } | null>(() => {
+    const storedTeamId = localStorage.getItem('activeTeamId');
+    const storedTeamName = localStorage.getItem('activeTeamName');
+    return storedTeamId && storedTeamName ? { id: storedTeamId, name: storedTeamName } : null;
+  });
 
   const fetchMembers = async () => {
     try {
@@ -77,12 +84,21 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const switchTeam = (teamId: string, teamName: string) => {
+    localStorage.setItem('activeTeamId', teamId);
+    localStorage.setItem('activeTeamName', teamName);
+    setActiveTeam({ id: teamId, name: teamName });
+    fetchMembers();
+  };
+
   const value = {
     members,
     loading,
     error,
+    activeTeam,
     fetchMembers,
-    inviteMember
+    inviteMember,
+    switchTeam
   };
 
   return <TeamContext.Provider value={value}>{children}</TeamContext.Provider>;

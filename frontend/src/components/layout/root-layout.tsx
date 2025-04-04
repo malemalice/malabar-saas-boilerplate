@@ -1,6 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -17,12 +17,13 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { TeamSwitchModal } from '../modals/TeamSwitchModal';
 import { Toaster } from "@/components/ui/toaster";
+import { useTeam } from '@/contexts/TeamContext';
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
   const [teamSwitchOpen, setTeamSwitchOpen] = useState(false);
-  const [activeTeamName, setActiveTeamName] = useState<string>('');
+  const { activeTeam } = useTeam();
 
   const getInitials = (name: string) => {
     return name
@@ -31,11 +32,6 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
       .join('')
       .toUpperCase();
   };
-
-  useEffect(() => {
-    const storedTeamName = localStorage.getItem('activeTeamName');
-    setActiveTeamName(storedTeamName || 'Select Team');
-  }, []);
 
   const getMenuItemClassName = (path: string) => {
     const baseClasses = 'group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-none disabled:pointer-events-none disabled:opacity-50 data-[active]:bg-accent/50 data-[state=open]:bg-accent/50';
@@ -89,7 +85,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>
                   <button onClick={() => setTeamSwitchOpen(true)} className="w-full text-left">
-                    {activeTeamName} (change)
+                    {activeTeam?.name || 'Select Team'} (change)
                   </button>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
