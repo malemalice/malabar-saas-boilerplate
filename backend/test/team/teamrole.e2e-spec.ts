@@ -99,7 +99,14 @@ describe('TeamController (e2e)', () => {
       expect(team2).toBeDefined();
       expect(team2.ownerId).toBe(user2Id);
 
-      // Verify User1's role in Team2
+      // Verify User1's member information in Team2
+      const user1Member = team2.members.find(m => m.userId === user1Id);
+      expect(user1Member).toBeDefined();
+      expect(user1Member.role).toBe(RoleType.BILLING);
+      expect(user1Member.email).toBe('user1@test.com');
+      expect(user1Member.name).toBe('User One');
+
+      // Verify database record
       const userTeam = await userTeamRepository.findOne({
         where: {
           userId: user1Id,
@@ -121,13 +128,74 @@ describe('TeamController (e2e)', () => {
       expect(team1Response.status).toBe(200);
       expect(team1Response.body.id).toBe(team1Id);
 
+      // Verify owner member information
+      expect(team1Response.body.ownerId).toBe(user1Id)
+
       // Check access to Team2 (billing member)
       const joinedTeamsResponse = await request(app.getHttpServer())
         .get('/teams/joined')
         .set('Authorization', `Bearer ${user1Token}`);
 
       expect(joinedTeamsResponse.status).toBe(200);
-      expect(joinedTeamsResponse.body.some(team => team.id === team2Id)).toBe(true);
+      const team2 = joinedTeamsResponse.body.find(team => team.id === team2Id);
+      expect(team2).toBeDefined();
+
+      // Verify billing member information
+      const billingMember = team2.members.find(m => m.userId === user1Id);
+      expect(billingMember).toBeDefined();
+      expect(billingMember.role).toBe(RoleType.BILLING);
+    });
+
+    describe('Team Member Role Update Scenarios', () => {
+      it('should allow team owner to update member role from billing to admin', async () => {
+        const response = await request(app.getHttpServer())
+          .patch(`/teams/${team2Id}/members/${user1Id}/role`)
+          .set('Authorization', `Bearer ${user2Token}`)
+          .send({ role: RoleType.ADMIN });
+        expect(response.status).toBe(200);
+        expect(response.body.members.find(m => m.userId === user1Id).role).toBe(RoleType.ADMIN);
+
+        // Verify role update in database
+        const userTeam = await userTeamRepository.findOne({
+          where: {
+            userId: user1Id,
+            teamId: team2Id,
+            status: UserTeamStatus.ACTIVE
+          },
+          relations: ['role']
+        });
+        expect(userTeam.role.name).toBe(RoleType.ADMIN);
+      });
+
+      it('should prevent non-owner from updating member roles', async () => {
+        const response = await request(app.getHttpServer())
+          .patch(`/teams/${team2Id}/members/${user2Id}/role`)
+          .set('Authorization', `Bearer ${user1Token}`)
+          .send({ role: RoleType.ADMIN });
+
+        expect(response.status).toBe(409);
+      });
+
+      it('should prevent updating team owner role', async () => {
+        const response = await request(app.getHttpServer())
+          .patch(`/teams/${team2Id}/members/${user2Id}/role`)
+          .set('Authorization', `Bearer ${user2Token}`)
+          .send({ role: RoleType.ADMIN });
+
+        expect(response.status).toBe(409);
+        expect(response.body.message).toBe('Cannot modify team owner role');
+      });
+
+      it('should return 404 when updating role for non-existent member', async () => {
+        const nonExistentUserId = '12345678-1234-1234-1234-123456789012';
+        const response = await request(app.getHttpServer())
+          .patch(`/teams/${team2Id}/members/${nonExistentUserId}/role`)
+          .set('Authorization', `Bearer ${user2Token}`)
+          .send({ role: RoleType.ADMIN });
+
+        expect(response.status).toBe(404);
+        expect(response.body.message).toBe('Team member not found');
+      });
     });
   });
 });

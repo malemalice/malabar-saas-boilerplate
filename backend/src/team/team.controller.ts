@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TeamService } from './team.service';
 import { CreateTeamDto, AddTeamMemberDto, TeamResponseDto, InviteTeamMemberDto, TeamInvitationResponseDto } from './dto/team.dto';
+import { UpdateTeamMemberRoleDto } from './dto/update-team-member-role.dto';
 import { TeamMemberResponseDto } from './dto/team-member-response.dto';
 import { RoleType } from 'src/role/role.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
@@ -55,7 +56,7 @@ export class TeamController {
         const team = await this.teamService.createTeam(createTeamDto.name, req.user.id);
         return {
             id: team.id,
-            name: team.name,
+            name: team.name + " Team",
             ownerId: team.ownerId,
             createdAt: team.createdAt,
             members: team.members?.map(member => ({
@@ -188,6 +189,34 @@ export class TeamController {
         @Param('teamId') teamId: string,
     ): Promise<void> {
         await this.teamService.deleteTeam(teamId, req.user.id);
+    }
+
+    @ApiOperation({ summary: 'Update team member role' })
+    @ApiResponse({ status: 200, description: 'Role updated successfully', type: TeamResponseDto })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @ApiResponse({ status: 404, description: 'Team or member not found' })
+    @ApiResponse({ status: 409, description: 'Cannot modify team owner role' })
+    @Patch(':teamId/members/:userId/role')
+    @UseGuards(JwtAuthGuard)
+    async updateMemberRole(
+        @Request() req,
+        @Param('teamId') teamId: string,
+        @Param('userId') userId: string,
+        @Body() updateRoleDto: UpdateTeamMemberRoleDto
+    ): Promise<TeamResponseDto> {
+        const team = await this.teamService.updateMemberRole(teamId, userId, updateRoleDto.role);
+        return {
+            id: team.id,
+            name: team.name,
+            ownerId: team.ownerId,
+            createdAt: team.createdAt,
+            members: team.members.map(member => ({
+                userId: member.user.id,
+                name: member.user.name,
+                email: member.user.email,
+                role: member.role?.name,
+            })),
+        };
     }
 
     @ApiOperation({ summary: 'Get teams where user is a member' })

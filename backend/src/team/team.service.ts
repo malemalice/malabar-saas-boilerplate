@@ -70,7 +70,13 @@ export class TeamService {
     async findById(id: string): Promise<Team> {
         const team = await this.teamRepository.findOne({
             where: { id },
-            relations: ['owner', 'members'],
+            relations: {
+                owner: true,
+                members: {
+                    role: true,
+                    user: true
+                }
+            }
         });
         if (!team) {
             throw new NotFoundException('Team not found');
@@ -303,15 +309,57 @@ export class TeamService {
 
     async removeMember(teamId: string, userId: string): Promise<void> {
         const team = await this.findById(teamId);
-        
-        if (team.ownerId === userId) {
+        const userTeam = await this.userTeamRepository.findOne({
+            where: {
+                teamId,
+                userId,
+            },
+            relations: ['role'],
+        });
+
+        if (!userTeam) {
+            throw new NotFoundException('Team member not found');
+        }
+
+        if (userTeam.role.name === RoleType.OWNER) {
             throw new ConflictException('Cannot remove team owner');
         }
 
-        await this.userTeamRepository.delete({
-            teamId,
-            userId,
+        await this.userTeamRepository.remove(userTeam);
+    }
+
+    async updateMemberRole(teamId: string, userId: string, newRoleName: RoleType): Promise<Team> {
+        const userTeam = await this.userTeamRepository.findOne({
+            where: {
+                teamId,
+                userId,
+                status: UserTeamStatus.ACTIVE,
+            },
+            relations: ['role'],
         });
+
+        if (!userTeam) {
+            throw new NotFoundException('Team member not found');
+        }
+
+        if (userTeam.role.name === RoleType.OWNER) {
+            throw new ConflictException('Cannot modify team owner role');
+        }
+
+        if (newRoleName === RoleType.OWNER) {
+            throw new ConflictException('Cannot assign owner role to team member');
+        }
+
+        const newRole = await this.roleService.findByName(newRoleName);
+        if (!newRole || !newRole.id) {
+            throw new NotFoundException('Role not found');
+        }
+
+        userTeam.roleId = newRole.id;
+        userTeam.role = newRole;
+        await this.userTeamRepository.save(userTeam);
+        
+       return this.findById(teamId);
     }
 
     async findTeamsByMemberId(userId: string): Promise<Team[]> {
@@ -320,7 +368,7 @@ export class TeamService {
                 userId,
                 status: UserTeamStatus.ACTIVE,
             },
-            relations: ['team', 'team.members'],
+            relations: ['team', 'team.members', 'team.members.role', 'team.members.user'],
         });
 
         return userTeams.map(ut => ut.team);
