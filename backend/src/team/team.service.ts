@@ -11,11 +11,44 @@ import { TeamInvitation } from './entities/team-invitation.entity';
 import { TeamInvitationStatus } from './entities/team-invitation.entity';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
-import { RoleType } from 'src/role/role.entity';
-import { RoleService } from 'src/role/role.service';
+import { Role, RoleType } from '../role/role.entity';
+import { RoleService } from '../role/role.service';
 
 @Injectable()
 export class TeamService {
+    async getUserTeamRole(teamId: string, userId: string): Promise<{ role: Role }> {
+        // First check if the user is the team owner
+        const team = await this.teamRepository.findOne({
+            where: { id: teamId }
+        });
+
+        if (!team) {
+            throw new NotFoundException('Team not found');
+        }
+
+        // If user is the owner, return owner role
+        if (team.ownerId === userId) {
+            const ownerRole = await this.roleService.findByName(RoleType.OWNER);
+            return { role: ownerRole };
+        }
+
+        // If not owner, check user_team table
+        const userTeam = await this.userTeamRepository.findOne({
+            where: {
+                teamId,
+                userId,
+                status: UserTeamStatus.ACTIVE
+            },
+            relations: ['role']
+        });
+
+        if (!userTeam) {
+            return null;
+        }
+
+        return { role: userTeam.role };
+    }
+
     async findInvitationByToken(token: string) {
         const invitation = await this.teamInvitationRepository.findOne({
             where: {

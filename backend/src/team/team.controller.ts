@@ -6,6 +6,8 @@ import { UpdateTeamMemberRoleDto } from './dto/update-team-member-role.dto';
 import { TeamMemberResponseDto } from './dto/team-member-response.dto';
 import { RoleType } from 'src/role/role.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
+import { RolesGuard } from 'src/auth/roles.guard';
+import { Roles } from 'src/auth/roles.decorator';
 
 @ApiTags('teams')
 @Controller('teams')
@@ -74,7 +76,8 @@ export class TeamController {
     @ApiResponse({ status: 404, description: 'Team or user not found' })
     @ApiResponse({ status: 409, description: 'User is already a member of this team' })
     @Post(':teamId/members')
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard,RolesGuard)
+    @Roles(RoleType.OWNER,RoleType.ADMIN)
     async addMember(
         @Request() req,
         @Param('teamId') teamId: string,
@@ -101,7 +104,8 @@ export class TeamController {
     @ApiResponse({ status: 404, description: 'Team not found' })
     @ApiResponse({ status: 409, description: 'User is already invited to this team' })
     @Post(':teamId/invite')
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(RoleType.OWNER,RoleType.ADMIN)
     async inviteMember(
         @Request() req,
         @Param('teamId') teamId: string,
@@ -168,7 +172,8 @@ export class TeamController {
     @ApiResponse({ status: 404, description: 'Team or member not found' })
     @ApiResponse({ status: 409, description: 'Cannot remove team owner' })
     @Delete(':teamId/members/:userId')
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(RoleType.OWNER,RoleType.ADMIN)
     async removeMember(
         @Request() req,
         @Param('teamId') teamId: string,
@@ -183,7 +188,8 @@ export class TeamController {
     @ApiResponse({ status: 404, description: 'Team not found' })
     @ApiResponse({ status: 409, description: 'Only team owner can delete the team' })
     @Delete(':teamId')
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(RoleType.OWNER)
     async deleteTeam(
         @Request() req,
         @Param('teamId') teamId: string,
@@ -197,7 +203,8 @@ export class TeamController {
     @ApiResponse({ status: 404, description: 'Team or member not found' })
     @ApiResponse({ status: 409, description: 'Cannot modify team owner role' })
     @Patch(':teamId/members/:userId/role')
-    @UseGuards(JwtAuthGuard)
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles(RoleType.OWNER,RoleType.ADMIN)
     async updateMemberRole(
         @Request() req,
         @Param('teamId') teamId: string,

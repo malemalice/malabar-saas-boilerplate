@@ -173,7 +173,7 @@ describe('TeamController (e2e)', () => {
           .set('Authorization', `Bearer ${user1Token}`)
           .send({ role: RoleType.ADMIN });
 
-        expect(response.status).toBe(409);
+        expect(response.status).toBe(403);
       });
 
       it('should prevent updating team owner role', async () => {
