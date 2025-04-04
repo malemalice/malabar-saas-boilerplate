@@ -2,6 +2,7 @@ import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards, Request } f
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { TeamService } from './team.service';
 import { CreateTeamDto, AddTeamMemberDto, TeamResponseDto, InviteTeamMemberDto, TeamInvitationResponseDto } from './dto/team.dto';
+import { TeamMemberResponseDto } from './dto/team-member-response.dto';
 import { RoleType } from 'src/role/role.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 
@@ -37,9 +38,10 @@ export class TeamController {
             ownerId: team.ownerId,
             createdAt: team.createdAt,
             members: team.members.map(member => ({
-                id: member.id,
-                name: member.name,
-                email: member.email,
+                userId: member.user.id,
+                name: member.user.name,
+                email: member.user.email,
+                role: member.role?.name,
             })),
         };
     }
@@ -57,9 +59,10 @@ export class TeamController {
             ownerId: team.ownerId,
             createdAt: team.createdAt,
             members: team.members?.map(member => ({
-                id: member.id,
-                name: member.name,
-                email: member.email,
+                userId: member.user.id,
+                name: member.user.name,
+                email: member.user.email,
+                role: member.role?.name,
             })) || [],
         };
     }
@@ -83,9 +86,10 @@ export class TeamController {
             ownerId: team.ownerId,
             createdAt: team.createdAt,
             members: team.members.map(member => ({
-                id: member.id,
-                name: member.name,
-                email: member.email,
+                userId: member.user.id,
+                name: member.user.name,
+                email: member.user.email,
+                role: member.role?.name,
             })),
         };
     }
@@ -110,9 +114,10 @@ export class TeamController {
             ownerId: team.ownerId,
             createdAt: team.createdAt,
             members: team.members.map(member => ({
-                id: member.id,
-                name: member.name,
-                email: member.email,
+                userId: member.user.id,
+                name: member.user.name,
+                email: member.user.email,
+                role: member.role?.name,
             })),
         };
     }
@@ -135,9 +140,10 @@ export class TeamController {
             ownerId: team.ownerId,
             createdAt: team.createdAt,
             members: team.members.map(member => ({
-                id: member.id,
-                name: member.name,
-                email: member.email,
+                userId: member.user.id,
+                name: member.user.name,
+                email: member.user.email,
+                role: member.role?.name,
             })),
         };
     }
@@ -196,11 +202,14 @@ export class TeamController {
             name: team.name,
             ownerId: team.ownerId,
             createdAt: team.createdAt,
-            members: team.members.map(member => ({
-                id: member.id,
-                name: member.name,
-                email: member.email,
-            })),
+            members: team.members.map(member => {
+                return {
+                    userId: member.user.id,
+                    name: member.user.name,
+                    email: member.user.email,
+                    role: member?.role?.name
+                };
+            })
         }));
     }
 }

@@ -65,6 +65,13 @@ describe('Team Creation during Signup (e2e)', () => {
       expect(userTeam).toBeDefined();
       expect(userTeam.status).toBe(UserTeamStatus.ACTIVE);
       expect(userTeam.role.name).toBe(RoleType.OWNER);
+
+      // Get team details and verify member response format
+      const teamResponse = await request(app.getHttpServer())
+        .get('/teams/my-team')
+        .set('Authorization', `Bearer ${signupResponse.body.accessToken}`);
+
+      expect(teamResponse.status).toBe(200);
     });
   });
 

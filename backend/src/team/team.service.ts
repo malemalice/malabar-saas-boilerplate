@@ -81,7 +81,7 @@ export class TeamService {
     async findByOwnerId(ownerId: string): Promise<Team> {
         const team = await this.teamRepository.findOne({
             where: { ownerId },
-            relations: ['owner', 'members'],
+            relations: ['owner', 'members','members.user'],
         });
         if (!team) {
             throw new NotFoundException('Team not found');
@@ -90,13 +90,12 @@ export class TeamService {
     }
 
     async addMember(teamId: string, userId: string, roleName: RoleType = RoleType.BILLING): Promise<Team> {
-        const [team, user, role] = await Promise.all([
+        const [team, role] = await Promise.all([
             this.findById(teamId),
-            this.userService.findById(userId),
             this.roleService.findByName(roleName),
         ]);
 
-        if (team.members.some(member => member.id === userId)) {
+        if (team.members.some(member => member.userId === userId)) {
             throw new ConflictException('User is already a member of this team');
         }
 
@@ -108,7 +107,6 @@ export class TeamService {
         });
         await this.userTeamRepository.save(userTeam);
 
-        team.members = [...team.members, user];
         return this.teamRepository.save(team);
     }
 
