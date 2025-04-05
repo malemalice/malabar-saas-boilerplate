@@ -18,6 +18,7 @@ interface TeamContextType {
   inviteMember: (email: string, role: string) => Promise<void>;
   switchTeam: (teamId: string, teamName: string) => void;
   updateMemberRole: (userId: string, role: string) => Promise<void>;
+  removeMember: (userId: string) => Promise<void>;
 }
 
 const TeamContext = createContext<TeamContextType | undefined>(undefined);
@@ -108,6 +109,22 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const removeMember = async (userId: string) => {
+    if (!activeTeam) return;
+    try {
+      setLoading(true);
+      setError(null);
+      await axios.delete(`/api/teams/${activeTeam.id}/members/${userId}`);
+      await fetchMembers();
+    } catch (err) {
+      setError('Failed to remove team member');
+      console.error('Error removing team member:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const value = {
     members,
     loading,
@@ -116,7 +133,8 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     fetchMembers,
     inviteMember,
     switchTeam,
-    updateMemberRole
+    updateMemberRole,
+    removeMember
   };
 
   return <TeamContext.Provider value={value}>{children}</TeamContext.Provider>;

@@ -2,6 +2,7 @@ import { Pencil, Trash2 } from 'lucide-react';
 import { useTeam } from '@/contexts/TeamContext';
 import { InviteTeamModal } from '@/components/modals/InviteTeamModal';
 import { RoleChangeModal } from '@/components/modals/RoleChangeModal';
+import { DeleteMemberModal } from '@/components/modals/DeleteMemberModal';
 import { useState } from 'react';
 
 const Team = () => {
@@ -12,6 +13,11 @@ const Team = () => {
     role: string;
   } | null>(null);
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  const [selectedMemberForDelete, setSelectedMemberForDelete] = useState<{
+    userId: string;
+    email: string;
+  } | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   if (loading) {
     return (
@@ -28,8 +34,6 @@ const Team = () => {
       </div>
     );
   }
-
-
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -94,6 +98,13 @@ const Team = () => {
                   </button>
                   <button 
                     className="text-red-500 hover:text-red-700"
+                    onClick={() => {
+                      setSelectedMemberForDelete({
+                        userId: member.userId,
+                        email: member.email
+                      });
+                      setIsDeleteModalOpen(true);
+                    }}
                     disabled={member.role === 'Owner'}
                     style={{ opacity: member.role === 'Owner' ? 0.5 : 1 }}
                   >
@@ -113,6 +124,15 @@ const Team = () => {
           userId={selectedMember.userId}
           email={selectedMember.email}
           currentRole={selectedMember.role}
+        />
+      )}
+      {selectedMemberForDelete && (
+        <DeleteMemberModal
+          open={isDeleteModalOpen}
+          onOpenChange={setIsDeleteModalOpen}
+          teamId={activeTeam?.id || ''}
+          userId={selectedMemberForDelete.userId}
+          email={selectedMemberForDelete.email}
         />
       )}
     </div>
