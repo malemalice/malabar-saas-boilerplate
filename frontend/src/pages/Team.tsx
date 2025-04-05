@@ -1,17 +1,17 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import { useTeam } from '@/contexts/TeamContext';
 import { InviteTeamModal } from '@/components/modals/InviteTeamModal';
-
-interface TeamMember {
-  id: string;
-  name: string;
-  email: string;
-  role: 'Owner' | 'Admin' | 'Member';
-  status: 'Active' | 'Pending' | 'Inactive';
-}
+import { RoleChangeModal } from '@/components/modals/RoleChangeModal';
+import { useState } from 'react';
 
 const Team = () => {
-  const { members, loading, error } = useTeam();
+  const { members, loading, error, activeTeam } = useTeam();
+  const [selectedMember, setSelectedMember] = useState<{
+    userId: string;
+    email: string;
+    role: string;
+  } | null>(null);
+  const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
 
   if (loading) {
     return (
@@ -61,7 +61,7 @@ const Team = () => {
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
             {members.map((member) => (
-              <tr key={member.id}>
+              <tr key={member.userId}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div>
                     <div className="text-sm font-medium text-gray-900">{member.name}</div>
@@ -77,7 +77,19 @@ const Team = () => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
-                  <button className="text-blue-500 hover:text-blue-700 mr-4">
+                  <button 
+                    className="text-blue-500 hover:text-blue-700 mr-4"
+                    onClick={() => {
+                      setSelectedMember({
+                        userId: member.userId,
+                        email: member.email,
+                        role: member.role
+                      });
+                      setIsRoleModalOpen(true);
+                    }}
+                    disabled={member.role === 'Owner'}
+                    style={{ opacity: member.role === 'Owner' ? 0.5 : 1 }}
+                  >
                     <Pencil className="h-4 w-4" />
                   </button>
                   <button 
@@ -93,6 +105,16 @@ const Team = () => {
           </tbody>
         </table>
       </div>
+      {selectedMember && (
+        <RoleChangeModal
+          open={isRoleModalOpen}
+          onOpenChange={setIsRoleModalOpen}
+          teamId={activeTeam?.id || ''}
+          userId={selectedMember.userId}
+          email={selectedMember.email}
+          currentRole={selectedMember.role}
+        />
+      )}
     </div>
   );
 };

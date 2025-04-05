@@ -93,8 +93,8 @@ export function InviteTeamModal() {
                       {...field}
                       className="w-full px-3 py-2 border rounded-md text-sm"
                     >
-                      <option value="Admin">Admin</option>
-                      <option value="Member">Member</option>
+                      <option value="admin">Admin</option>
+                      <option value="billing">Billing</option>
                     </select>
                   </FormControl>
                   <FormMessage />

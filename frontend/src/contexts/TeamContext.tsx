@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import axios from '@/lib/axios';
 
 interface TeamMember {
-  id: string;
+  userId: string;
   name: string;
   email: string;
   role: 'Owner' | 'Admin' | 'Billing';
@@ -17,6 +17,7 @@ interface TeamContextType {
   fetchMembers: () => Promise<void>;
   inviteMember: (email: string, role: string) => Promise<void>;
   switchTeam: (teamId: string, teamName: string) => void;
+  updateMemberRole: (userId: string, role: string) => Promise<void>;
 }
 
 const TeamContext = createContext<TeamContextType | undefined>(undefined);
@@ -46,7 +47,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
         }
         
         return {
-          id: member.id,
+          userId: member.userId,
           name: member.name,
           email: member.email,
           role: role,
@@ -91,6 +92,22 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     fetchMembers();
   };
 
+  const updateMemberRole = async (userId: string, role: string) => {
+    if (!activeTeam) return;
+    try {
+      setLoading(true);
+      setError(null);
+      await axios.patch(`/api/teams/${activeTeam.id}/members/${userId}/role`, { role });
+      await fetchMembers();
+    } catch (err) {
+      setError('Failed to update member role');
+      console.error('Error updating member role:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const value = {
     members,
     loading,
@@ -98,7 +115,8 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     activeTeam,
     fetchMembers,
     inviteMember,
-    switchTeam
+    switchTeam,
+    updateMemberRole
   };
 
   return <TeamContext.Provider value={value}>{children}</TeamContext.Provider>;
