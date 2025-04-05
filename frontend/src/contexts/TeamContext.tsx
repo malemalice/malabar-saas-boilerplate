@@ -35,13 +35,13 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get('/api/teams/my-team');
+      const response = await axios.get('/api/teams/'+activeTeam?.id);
       const teamData = response.data;
       
       // Transform the API response to match our TeamMember interface
       const transformedMembers = teamData.members.map((member: any) => {
-        let role = 'Member';
-        if (member.id === teamData.ownerId) {
+        let role = member.role;
+        if (member.userId === teamData.ownerId) {
           role = 'Owner';
         }
         
