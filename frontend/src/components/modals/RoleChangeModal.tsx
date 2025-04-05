@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { TEAM_ROLES } from '@/constants/roles';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -73,8 +74,8 @@ export function RoleChangeModal({ open, onOpenChange, teamId, userId, email, cur
                 <SelectValue placeholder="Select a role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="admin">Admin</SelectItem>
-                <SelectItem value="billing">Billing</SelectItem>
+                <SelectItem value={TEAM_ROLES.ADMIN}>Admin</SelectItem>
+                <SelectItem value={TEAM_ROLES.BILLING}>Billing</SelectItem>
               </SelectContent>
             </Select>
           </div>
