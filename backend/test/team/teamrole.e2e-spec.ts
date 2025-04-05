@@ -197,5 +197,160 @@ describe('TeamController (e2e)', () => {
         expect(response.body.message).toBe('Team member not found');
       });
     });
+
+    describe('Team Member Removal Scenarios', () => {
+      beforeEach(async () => {
+        // User2 invites User1 to their team as admin member
+        const inviteResponse = await request(app.getHttpServer())
+          .post(`/teams/${team2Id}/invite`)
+          .set('Authorization', `Bearer ${user2Token}`)
+          .send({
+            email: 'user1@test.com',
+            role: RoleType.ADMIN
+          });
+
+        expect(inviteResponse.status).toBe(201);
+
+        // User1 accepts invitation to User2's team
+        const acceptInviteResponse = await request(app.getHttpServer())
+          .post(`/teams/invitations/${team2Id}/accept`)
+          .set('Authorization', `Bearer ${user1Token}`);
+
+        expect(acceptInviteResponse.status).toBe(201);
+      });
+
+      it('should allow team owner to remove a member', async () => {
+        const response = await request(app.getHttpServer())
+          .delete(`/teams/${team2Id}/members/${user1Id}`)
+          .set('Authorization', `Bearer ${user2Token}`);
+
+        expect(response.status).toBe(200);
+
+        // Verify member was removed
+        const userTeam = await userTeamRepository.findOne({
+          where: {
+            userId: user1Id,
+            teamId: team2Id,
+            status: UserTeamStatus.ACTIVE
+          }
+        });
+        expect(userTeam).toBeNull();
+      });
+
+      it('should allow admin to remove a regular member', async () => {
+        // First update User1's role to admin
+        const updateRoleResponse = await request(app.getHttpServer())
+          .patch(`/teams/${team2Id}/members/${user1Id}/role`)
+          .set('Authorization', `Bearer ${user2Token}`)
+          .send({ role: RoleType.ADMIN });
+        expect(updateRoleResponse.status).toBe(200);
+
+        // Create a new regular member
+        const user3 = await authService.signup('user3@test.com', 'password123', 'User Three');
+        const user3Id = user3.user.id;
+
+        // Invite user3 as a regular member
+        await request(app.getHttpServer())
+          .post(`/teams/${team2Id}/invite`)
+          .set('Authorization', `Bearer ${user2Token}`)
+          .send({
+            email: 'user3@test.com',
+            role: RoleType.ADMIN
+          });
+
+        const user3Login = await authService.login('user3@test.com', 'password123');
+        const user3Token = user3Login.accessToken;
+
+        // Accept invitation
+        await request(app.getHttpServer())
+          .post(`/teams/invitations/${team2Id}/accept`)
+          .set('Authorization', `Bearer ${user3Token}`);
+            
+        // User1 (admin) removes user3
+        const response = await request(app.getHttpServer())
+          .delete(`/teams/${team2Id}/members/${user3Id}`)
+          .set('Authorization', `Bearer ${user1Token}`);
+        expect(response.status).toBe(200);
+
+        // Verify member was removed
+        const userTeam = await userTeamRepository.findOne({
+          where: {
+            userId: user3Id,
+            teamId: team2Id,
+            status: UserTeamStatus.ACTIVE
+          }
+        });
+        expect(userTeam).toBeNull();
+      });
+
+      it('should prevent regular member from removing other members', async () => {
+        // Create a new regular member
+        const user3 = await authService.signup('user3@test.com', 'password123', 'User Three');
+        const user3Id = user3.user.id;
+
+        // Invite user3 as a regular member
+        await request(app.getHttpServer())
+          .post(`/teams/${team2Id}/invite`)
+          .set('Authorization', `Bearer ${user2Token}`)
+          .send({
+            email: 'user3@test.com',
+            role: RoleType.ADMIN
+          });
+
+        const user3Login = await authService.login('user3@test.com', 'password123');
+        const user3Token = user3Login.accessToken;
+
+        // Accept invitation
+        await request(app.getHttpServer())
+          .post(`/teams/invitations/${team2Id}/accept`)
+          .set('Authorization', `Bearer ${user3Token}`);
+
+        // User3 tries to remove User1
+        const response = await request(app.getHttpServer())
+          .delete(`/teams/${team2Id}/members/${user1Id}`)
+          .set('Authorization', `Bearer ${user3Token}`);
+
+        expect(response.status).toBe(403);
+
+        // Verify User1 is still a member
+        const userTeam = await userTeamRepository.findOne({
+          where: {
+            userId: user1Id,
+            teamId: team2Id,
+            status: UserTeamStatus.ACTIVE
+          }
+        });
+        expect(userTeam).not.toBeNull();
+      });
+
+      it('should return 404 when removing non-existent member', async () => {
+        const nonExistentUserId = '12345678-1234-1234-1234-123456789012';
+        const response = await request(app.getHttpServer())
+          .delete(`/teams/${team2Id}/members/${nonExistentUserId}`)
+          .set('Authorization', `Bearer ${user2Token}`);
+
+        expect(response.status).toBe(404);
+        expect(response.body.message).toBe('Team member not found');
+      });
+
+      it('should prevent removing team owner', async () => {
+        const response = await request(app.getHttpServer())
+          .delete(`/teams/${team2Id}/members/${user2Id}`)
+          .set('Authorization', `Bearer ${user1Token}`);
+
+        expect(response.status).toBe(409);
+        expect(response.body.message).toBe('Cannot remove team owner');
+
+        // Verify owner is still a member
+        const userTeam = await userTeamRepository.findOne({
+          where: {
+            userId: user2Id,
+            teamId: team2Id,
+            status: UserTeamStatus.ACTIVE
+          }
+        });
+        expect(userTeam).not.toBeNull();
+      });
+    });
   });
 });
