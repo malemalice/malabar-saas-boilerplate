@@ -61,6 +61,17 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.setItem('refreshToken', data.refreshToken);
     axios.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
     await fetchUser();
+    
+    // Fetch and store first team ID
+    try {
+      const { data: teams } = await axios.get('/api/teams/joined');
+      if (teams.length > 0) {
+        localStorage.setItem('activeTeamId', teams[0].id);
+        localStorage.setItem('activeTeamName', teams[0].name);
+      }
+    } catch (error) {
+      console.error('Failed to fetch teams:', error);
+    }
   };
 
   const signup = async (email: string, password: string, name: string) => {

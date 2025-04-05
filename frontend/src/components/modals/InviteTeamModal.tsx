@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import axios from '@/lib/axios';
+import { TEAM_ROLES } from '@/constants/roles';
 import { useTeam } from '@/contexts/TeamContext';
 import {
   Dialog,
@@ -26,7 +26,7 @@ import { Input } from '@/components/ui/input';
 
 const inviteFormSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
-  role: z.enum(['Admin', 'Member']),
+  role: z.enum([TEAM_ROLES.OWNER, TEAM_ROLES.ADMIN, TEAM_ROLES.BILLING]),
 });
 
 type InviteFormValues = z.infer<typeof inviteFormSchema>;
@@ -38,7 +38,7 @@ export function InviteTeamModal() {
     resolver: zodResolver(inviteFormSchema),
     defaultValues: {
       email: '',
-      role: 'Member',
+      role: TEAM_ROLES.ADMIN,
     },
   });
 
@@ -93,8 +93,9 @@ export function InviteTeamModal() {
                       {...field}
                       className="w-full px-3 py-2 border rounded-md text-sm"
                     >
-                      <option value="Admin">Admin</option>
-                      <option value="Member">Member</option>
+                      <option value={TEAM_ROLES.OWNER}>Owner</option>
+                      <option value={TEAM_ROLES.ADMIN}>Admin</option>
+                      <option value={TEAM_ROLES.BILLING}>Billing</option>
                     </select>
                   </FormControl>
                   <FormMessage />

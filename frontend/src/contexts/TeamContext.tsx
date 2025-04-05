@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import axios from '@/lib/axios';
 
 interface TeamMember {
-  id: string;
+  userId: string;
   name: string;
   email: string;
   role: 'Owner' | 'Admin' | 'Billing';
@@ -13,8 +13,12 @@ interface TeamContextType {
   members: TeamMember[];
   loading: boolean;
   error: string | null;
+  activeTeam: { id: string; name: string } | null;
   fetchMembers: () => Promise<void>;
   inviteMember: (email: string, role: string) => Promise<void>;
+  switchTeam: (teamId: string, teamName: string) => void;
+  updateMemberRole: (userId: string, role: string) => Promise<void>;
+  removeMember: (userId: string) => Promise<void>;
 }
 
 const TeamContext = createContext<TeamContextType | undefined>(undefined);
@@ -23,23 +27,28 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [activeTeam, setActiveTeam] = useState<{ id: string; name: string } | null>(() => {
+    const storedTeamId = localStorage.getItem('activeTeamId');
+    const storedTeamName = localStorage.getItem('activeTeamName');
+    return storedTeamId && storedTeamName ? { id: storedTeamId, name: storedTeamName } : null;
+  });
 
   const fetchMembers = async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get('/api/teams/my-team');
+      const response = await axios.get('/api/teams/'+activeTeam?.id);
       const teamData = response.data;
       
       // Transform the API response to match our TeamMember interface
       const transformedMembers = teamData.members.map((member: any) => {
-        let role = 'Member';
-        if (member.id === teamData.ownerId) {
+        let role = member.role;
+        if (member.userId === teamData.ownerId) {
           role = 'Owner';
         }
         
         return {
-          id: member.id,
+          userId: member.userId,
           name: member.name,
           email: member.email,
           role: role,
@@ -77,12 +86,55 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const switchTeam = (teamId: string, teamName: string) => {
+    localStorage.setItem('activeTeamId', teamId);
+    localStorage.setItem('activeTeamName', teamName);
+    setActiveTeam({ id: teamId, name: teamName });
+    fetchMembers();
+  };
+
+  const updateMemberRole = async (userId: string, role: string) => {
+    if (!activeTeam) return;
+    try {
+      setLoading(true);
+      setError(null);
+      await axios.patch(`/api/teams/${activeTeam.id}/members/${userId}/role`, { role });
+      await fetchMembers();
+    } catch (err) {
+      setError('Failed to update member role');
+      console.error('Error updating member role:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removeMember = async (userId: string) => {
+    if (!activeTeam) return;
+    try {
+      setLoading(true);
+      setError(null);
+      await axios.delete(`/api/teams/${activeTeam.id}/members/${userId}`);
+      await fetchMembers();
+    } catch (err) {
+      setError('Failed to remove team member');
+      console.error('Error removing team member:', err);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const value = {
     members,
     loading,
     error,
+    activeTeam,
     fetchMembers,
-    inviteMember
+    inviteMember,
+    switchTeam,
+    updateMemberRole,
+    removeMember
   };
 
   return <TeamContext.Provider value={value}>{children}</TeamContext.Provider>;

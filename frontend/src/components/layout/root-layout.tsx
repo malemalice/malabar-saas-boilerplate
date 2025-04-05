@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useState } from 'react';
 import {
   NavigationMenu,
   NavigationMenuItem,
@@ -14,10 +15,15 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { TeamSwitchModal } from '../modals/TeamSwitchModal';
+import { Toaster } from "@/components/ui/toaster";
+import { useTeam } from '@/contexts/TeamContext';
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
+  const [teamSwitchOpen, setTeamSwitchOpen] = useState(false);
+  const { activeTeam } = useTeam();
 
   const getInitials = (name: string) => {
     return name
@@ -78,6 +84,13 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>
+                  <button onClick={() => setTeamSwitchOpen(true)} className="w-full text-left">
+                    {activeTeam?.name || 'Select Team'} (change)
+                  </button>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem>
                   <Link to="/profile" className="w-full">
                     Profile
                   </Link>
@@ -102,6 +115,8 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
         </div>
       </header>
       <main>{children}</main>
+      <TeamSwitchModal open={teamSwitchOpen} onOpenChange={setTeamSwitchOpen} />
+      <Toaster />
     </div>
   );
 };
