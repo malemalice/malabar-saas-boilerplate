@@ -45,6 +45,7 @@ export class TeamController {
                 name: member.user.name,
                 email: member.user.email,
                 role: member.role?.name,
+                status: member.status,
             })),
         };
     }
@@ -66,6 +67,7 @@ export class TeamController {
                 name: member.user.name,
                 email: member.user.email,
                 role: member.role?.name,
+                status: member.status,
             })) || [],
         };
     }
@@ -94,6 +96,7 @@ export class TeamController {
                 name: member.user.name,
                 email: member.user.email,
                 role: member.role?.name,
+                status: member.status,
             })),
         };
     }
@@ -123,6 +126,7 @@ export class TeamController {
                 name: member.user.name,
                 email: member.user.email,
                 role: member.role?.name,
+                status: member.status,
             })),
         };
     }
@@ -149,6 +153,7 @@ export class TeamController {
                 name: member.user.name,
                 email: member.user.email,
                 role: member.role?.name,
+                status: member.status,
             })),
         };
     }
@@ -222,6 +227,7 @@ export class TeamController {
                 name: member.user.name,
                 email: member.user.email,
                 role: member.role?.name,
+                status: member.status,
             })),
         };
     }
@@ -243,7 +249,8 @@ export class TeamController {
                     userId: member.user.id,
                     name: member.user.name,
                     email: member.user.email,
-                    role: member?.role?.name
+                    role: member?.role?.name,
+                    status: member?.status,
                 };
             })
         }));
@@ -270,6 +277,7 @@ export class TeamController {
                 name: member.user.name,
                 email: member.user.email,
                 role: member.role?.name,
+                status: member.status,
             })),
         };
     }

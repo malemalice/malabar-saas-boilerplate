@@ -52,7 +52,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
           name: member.name,
           email: member.email,
           role: role,
-          status: 'Active'
+          status: member.status
         };
       });
       
