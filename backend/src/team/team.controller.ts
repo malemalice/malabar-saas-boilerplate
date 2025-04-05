@@ -248,4 +248,29 @@ export class TeamController {
             })
         }));
     }
+    @ApiOperation({ summary: 'Get team details by ID' })
+    @ApiResponse({ status: 200, description: 'Returns the team details', type: TeamResponseDto })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @ApiResponse({ status: 403, description: 'Forbidden - User is not a member of this team' })
+    @ApiResponse({ status: 404, description: 'Team not found' })
+    @Get(':teamId')
+    @UseGuards(JwtAuthGuard)
+    async getTeamById(
+        @Request() req,
+        @Param('teamId') teamId: string
+    ): Promise<TeamResponseDto> {
+        const team = await this.teamService.findTeamByIdAndUserId(teamId, req.user.id);
+        return {
+            id: team.id,
+            name: team.name,
+            ownerId: team.ownerId,
+            createdAt: team.createdAt,
+            members: team.members.map(member => ({
+                userId: member.user.id,
+                name: member.user.name,
+                email: member.user.email,
+                role: member.role?.name,
+            })),
+        };
+    }
 }

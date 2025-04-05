@@ -416,4 +416,28 @@ export class TeamService {
 
         await this.teamRepository.remove(team);
     }
+
+    async findTeamByIdAndUserId(teamId: string, userId: string): Promise<Team> {
+        const team = await this.teamRepository.findOne({
+            where: { id: teamId },
+            relations: ['owner', 'members', 'members.user', 'members.role']
+        });
+
+        if (!team) {
+            throw new NotFoundException('Team not found');
+        }
+
+        // Check if user is owner or member
+        const isOwner = team.ownerId === userId;
+        const isMember = team.members.some(member => 
+            member.userId === userId && member.status === UserTeamStatus.ACTIVE
+        );
+
+        if (!isOwner && !isMember) {
+            throw new NotFoundException('Team not found or user is not a member');
+        }
+
+        return team;
+    }
+
 }
