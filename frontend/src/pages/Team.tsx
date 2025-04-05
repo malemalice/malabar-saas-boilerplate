@@ -3,6 +3,7 @@ import { useTeam } from '@/contexts/TeamContext';
 import { InviteTeamModal } from '@/components/modals/InviteTeamModal';
 import { RoleChangeModal } from '@/components/modals/RoleChangeModal';
 import { DeleteMemberModal } from '@/components/modals/DeleteMemberModal';
+import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
 
 const Team = () => {
@@ -76,9 +77,9 @@ const Team = () => {
                   {member.role}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                  <Badge status={member.status.toLowerCase() as "active" | "inviting" | "reject"}>
                     {member.status}
-                  </span>
+                  </Badge>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm">
                   <button 

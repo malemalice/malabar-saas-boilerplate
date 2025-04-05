@@ -1,6 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsUUID } from 'class-validator';
 import { RoleType } from '../../role/role.entity';
+import { UserTeamStatus } from '../enums/user-team-status.enum';
 
 export class TeamMemberResponseDto {
     @ApiProperty({ description: 'The member\'s unique identifier' })
@@ -18,4 +19,8 @@ export class TeamMemberResponseDto {
     @ApiProperty({ description: 'The member\'s role in the team', enum: RoleType })
     @IsString()
     role: RoleType;
+
+    @ApiProperty({ description: 'The member\'s status in the team', enum: UserTeamStatus })
+    @IsString()
+    status: UserTeamStatus;
 }
