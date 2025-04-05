@@ -200,13 +200,13 @@ describe('TeamController (e2e)', () => {
 
     describe('Team Member Removal Scenarios', () => {
       beforeEach(async () => {
-        // User2 invites User1 to their team as admin member
+        // User2 invites User1 to their team as billing member
         const inviteResponse = await request(app.getHttpServer())
           .post(`/teams/${team2Id}/invite`)
           .set('Authorization', `Bearer ${user2Token}`)
           .send({
             email: 'user1@test.com',
-            role: RoleType.ADMIN
+            role: RoleType.BILLING
           });
 
         expect(inviteResponse.status).toBe(201);
@@ -285,16 +285,16 @@ describe('TeamController (e2e)', () => {
 
       it('should prevent regular member from removing other members', async () => {
         // Create a new regular member
-        const user3 = await authService.signup('user3@test.com', 'password123', 'User Three');
+        const user3 = await authService.signup('user3_1@test.com', 'password123', 'User Three');
         const user3Id = user3.user.id;
 
-        // Invite user3 as a regular member
+        // Invite user3 as a regular member with BILLING role
         await request(app.getHttpServer())
           .post(`/teams/${team2Id}/invite`)
           .set('Authorization', `Bearer ${user2Token}`)
           .send({
             email: 'user3@test.com',
-            role: RoleType.ADMIN
+            role: RoleType.BILLING
           });
 
         const user3Login = await authService.login('user3@test.com', 'password123');
@@ -305,7 +305,7 @@ describe('TeamController (e2e)', () => {
           .post(`/teams/invitations/${team2Id}/accept`)
           .set('Authorization', `Bearer ${user3Token}`);
 
-        // User3 tries to remove User1
+        // User3 (regular member) tries to remove User1
         const response = await request(app.getHttpServer())
           .delete(`/teams/${team2Id}/members/${user1Id}`)
           .set('Authorization', `Bearer ${user3Token}`);
@@ -338,8 +338,8 @@ describe('TeamController (e2e)', () => {
           .delete(`/teams/${team2Id}/members/${user2Id}`)
           .set('Authorization', `Bearer ${user1Token}`);
 
-        expect(response.status).toBe(409);
-        expect(response.body.message).toBe('Cannot remove team owner');
+        expect(response.status).toBe(403);
+        expect(response.body.message).toBe('Forbidden resource');
 
         // Verify owner is still a member
         const userTeam = await userTeamRepository.findOne({
