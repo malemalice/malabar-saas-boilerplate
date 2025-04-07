@@ -8,7 +8,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { seedPlans } from '../utils/seed-plans';
 
-describe('BillingController - getAllPlans (e2e)', () => {
+describe('BillingController - Plans (e2e)', () => {
   let billingService: BillingService;
   let dataSource: DataSource;
   let planRepository: Repository<Plan>;
@@ -63,6 +63,33 @@ describe('BillingController - getAllPlans (e2e)', () => {
       expect(response.status).toBe(200);
       expect(response.body).toHaveLength(0);
       expect(Array.isArray(response.body)).toBe(true);
+    });
+  });
+
+  describe('GET /billing/plans/:id', () => {
+    it('should return a specific plan by ID', async () => {
+      const plans = await planRepository.find();
+      const testPlan = plans[0];
+
+      const response = await request(app.getHttpServer())
+        .get(`/billing/plans/${testPlan.id}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toMatchObject({
+        id: testPlan.id,
+        name: testPlan.name,
+        price: testPlan.price,
+        billingCycle: testPlan.billingCycle
+      });
+    });
+
+    it('should return 404 when plan does not exist', async () => {
+      const nonExistentId = 9999;
+
+      const response = await request(app.getHttpServer())
+        .get(`/billing/plans/${nonExistentId}`);
+
+      expect(response.status).toBe(404);
     });
   });
 });

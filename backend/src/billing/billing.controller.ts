@@ -28,7 +28,6 @@ export class BillingController {
     @ApiResponse({ status: 401, description: 'Unauthorized' })
     @ApiResponse({ status: 404, description: 'Plan not found' })
     @Get('plans/:id')
-    @UseGuards(JwtAuthGuard, RolesGuard)
     async getPlan(@Param('id') id: number): Promise<Plan> {
         return this.billingService.getPlan(id);
     }
