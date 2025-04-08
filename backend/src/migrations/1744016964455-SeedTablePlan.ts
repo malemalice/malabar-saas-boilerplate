@@ -3,7 +3,7 @@ import { MigrationInterface, QueryRunner } from "typeorm";
 export class SeedTablePlan1744016964455 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
-            INSERT INTO plans (name, price, features, "billingCycle", created_at) VALUES
+            INSERT INTO plans (name, price, features, "billingCycle", stripe_price_id, stripe_product_id, created_at) VALUES
             (
                 'Free',
                 0,
@@ -14,6 +14,8 @@ export class SeedTablePlan1744016964455 implements MigrationInterface {
                     {"label": "Basic analytics", "metric": "feature", "value": "basic"}
                 ]',
                 'monthly',
+                'price_1RBVhNFSnfST5K7Nfvg8X7bp',
+                'prod_S5h5vfqfc4DkpA',
                 NOW()
             ),
             (
@@ -28,6 +30,8 @@ export class SeedTablePlan1744016964455 implements MigrationInterface {
                     {"label": "Priority support", "metric": "support", "value": "priority"}
                 ]',
                 'monthly',
+                'price_1RBVhNFSnfST5K7Nfvg8X7bp',
+                'prod_S5h5vfqfc4DkpA',
                 NOW()
             ),
             (
@@ -44,6 +48,8 @@ export class SeedTablePlan1744016964455 implements MigrationInterface {
                     {"label": "Custom integrations", "metric": "integration", "value": "custom"}
                 ]',
                 'monthly',
+                'price_1RBVhNFSnfST5K7Nfvg8X7bp',
+                'prod_S5h5vfqfc4DkpA',
                 NOW()
             )
         `);

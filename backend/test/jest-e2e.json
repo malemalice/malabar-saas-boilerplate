@@ -6,6 +6,14 @@
   "transform": {
     "^.+\\.(t|j)s$": "ts-jest"
   },
+  "collectCoverage": false,
+  "coverageDirectory": "../coverage-e2e",
+  "coveragePathIgnorePatterns": [
+    "node_modules",
+    "test-config",
+    "interfaces",
+    "jestGlobalMocks.ts"
+  ],
   "moduleNameMapper": {
     "^src/(.*)$": "<rootDir>/../src/$1"
   },
