@@ -48,8 +48,18 @@ export class BillingService {
 
         const plan = await this.getPlan(planId);
         
-        const startDate = new Date();
-        const endDate = new Date();
+        // Find existing subscription with latest end date for the same team and plan
+        const existingSubscription = await this.subscriptionRepository.findOne({
+            where: {
+                teamId,
+                planId,
+                status: SubscriptionStatus.ACTIVE,
+            },
+            order: { endDate: 'DESC' }
+        });
+
+        const startDate = existingSubscription ? new Date(existingSubscription.endDate) : new Date();
+        const endDate = new Date(startDate);
         if (plan.billingCycle === BillingCycle.MONTHLY) {
             endDate.setMonth(endDate.getMonth() + 1);
         } else {
@@ -128,7 +138,7 @@ export class BillingService {
             const session = event.data.object as Stripe.Checkout.Session;
             const { subscriptionId, invoiceId } = session.metadata;
 
-            await this.processStripePayment(invoiceId, {
+            await this.processPayment(invoiceId, {
                 amountPaid: session.amount_total / 100,
                 paymentMethod: 'stripe',
                 transactionId: session.payment_intent as string
@@ -136,7 +146,7 @@ export class BillingService {
         }
     }
 
-    private async processStripePayment(invoiceId: string, paymentData: Partial<Payment>): Promise<Payment> {
+    private async processPayment(invoiceId: string, paymentData: Partial<Payment>): Promise<Payment> {
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();
