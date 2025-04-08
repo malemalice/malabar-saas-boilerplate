@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Headers, RawBodyRequest, Res, Req } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiHeader } from '@nestjs/swagger';
+import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -32,19 +33,19 @@ export class BillingController {
         return this.billingService.getPlan(id);
     }
 
-    @ApiOperation({ summary: 'Create a new subscription' })
-    @ApiResponse({ status: 201, description: 'Subscription created successfully', type: SubscriptionResponseDto })
+    @ApiOperation({ summary: 'Create a new subscription and get Stripe checkout URL' })
+    @ApiResponse({ status: 201, description: 'Subscription created successfully with checkout URL', type: SubscriptionResponseDto })
     @ApiResponse({ status: 401, description: 'Unauthorized' })
     @ApiResponse({ status: 403, description: 'Forbidden - Requires billing role' })
     @ApiResponse({ status: 404, description: 'Team or plan not found' })
     @Post('subscriptions')
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles(RoleType.BILLING)
+    // @Roles(RoleType.BILLING, RoleType.OWNER)
     async createSubscription(
         @Request() req,
         @Body() data: CreateSubscriptionDto,
-    ): Promise<Subscription> {
-        return this.billingService.createSubscription(data.teamId, data.planId);
+    ): Promise<{ subscription: Subscription; checkoutUrl: string }> {
+        return this.billingService.createSubscription(data.teamId, data.planId, data.paymentMethod);
     }
 
     @ApiOperation({ summary: 'Get team subscription' })
@@ -71,19 +72,20 @@ export class BillingController {
         return this.billingService.getTeamInvoices(teamId);
     }
 
-    @ApiOperation({ summary: 'Process payment for invoice' })
-    @ApiResponse({ status: 200, description: 'Payment processed successfully', type: PaymentResponseDto })
-    @ApiResponse({ status: 401, description: 'Unauthorized' })
-    @ApiResponse({ status: 403, description: 'Forbidden - Requires billing role' })
-    @ApiResponse({ status: 404, description: 'Invoice not found' })
-    @ApiResponse({ status: 400, description: 'Invoice is already paid' })
-    @Post('invoices/:invoiceId/pay')
-    @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles(RoleType.BILLING)
-    async processPayment(
-        @Param('invoiceId') invoiceId: number,
-        @Body() paymentData: ProcessPaymentDto,
-    ): Promise<Payment> {
-        return this.billingService.processPayment(invoiceId, paymentData);
+    @ApiOperation({ summary: 'Handle Stripe webhook events' })
+    @ApiResponse({ status: 200, description: 'Webhook processed successfully' })
+    @ApiHeader({ name: 'stripe-signature', description: 'Stripe webhook signature' })
+    @Post('webhook/stripe')
+    async handleWebhook(
+        @Headers('stripe-signature') signature: string,
+        @Req() req: RawBodyRequest<Request>,
+        @Res() res: Response
+    ): Promise<void> {
+        try {
+            await this.billingService.handleStripeWebhook(req.rawBody, signature);
+            res.status(200).send();
+        } catch (err) {
+            res.status(400).send(`Webhook Error: ${err.message}`);
+        }
     }
 }

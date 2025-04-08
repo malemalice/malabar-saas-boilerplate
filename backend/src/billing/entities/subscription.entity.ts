@@ -1,7 +1,8 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Plan } from './plan.entity';
 import { Team } from '../../team/team.entity';
 import { Invoice } from './invoice.entity';
+import { join } from 'path';
 
 export enum SubscriptionStatus {
     PENDING = 'pending',
@@ -12,19 +13,21 @@ export enum SubscriptionStatus {
 
 @Entity('subscriptions')
 export class Subscription {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
     @Column({ name: 'team_id' })
     teamId: string;
 
     @ManyToOne(() => Team, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'team_id' })
     team: Team;
 
     @Column({ name: 'plan_id' })
     planId: number;
 
     @ManyToOne(() => Plan, plan => plan.subscriptions)
+    @JoinColumn({ name: 'plan_id' })
     plan: Plan;
 
     @Column({ type: 'date', name: 'start_date' })

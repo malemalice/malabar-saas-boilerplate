@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Team } from '../../team/team.entity';
 import { Subscription } from './subscription.entity';
 import { Payment } from './payment.entity';
@@ -11,19 +11,21 @@ export enum InvoiceStatus {
 
 @Entity('invoices')
 export class Invoice {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
     @Column({ name: 'team_id' })
     teamId: string;
 
     @ManyToOne(() => Team, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'team_id' })
     team: Team;
 
     @Column({ name: 'subscription_id' })
-    subscriptionId: number;
+    subscriptionId: string;
 
     @ManyToOne(() => Subscription, subscription => subscription.invoices)
+    @JoinColumn({ name: 'subscription_id' })
     subscription: Subscription;
 
     @Column('decimal', { precision: 10, scale: 2 })

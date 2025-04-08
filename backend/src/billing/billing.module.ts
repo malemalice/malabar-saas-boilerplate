@@ -7,6 +7,7 @@ import { Payment } from './entities/payment.entity';
 import { BillingService } from './billing.service';
 import { BillingController } from './billing.controller';
 import { TeamModule } from '../team/team.module';
+import { StripeConfig } from '../config/stripe.config';
 
 @Module({
     imports: [
@@ -14,7 +15,7 @@ import { TeamModule } from '../team/team.module';
         TeamModule,
     ],
     controllers: [BillingController],
-    providers: [BillingService],
+    providers: [BillingService, StripeConfig],
     exports: [BillingService],
 })
 export class BillingModule {}

@@ -1,11 +1,14 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
+import { ConfigService } from '@nestjs/config';
 import { Plan, BillingCycle } from './entities/plan.entity';
 import { Subscription, SubscriptionStatus } from './entities/subscription.entity';
 import { Invoice, InvoiceStatus } from './entities/invoice.entity';
 import { Payment, PaymentStatus } from './entities/payment.entity';
 import { TeamService } from '../team/team.service';
+import { StripeConfig } from '../config/stripe.config';
+import Stripe from 'stripe';
 
 @Injectable()
 export class BillingService {
@@ -20,6 +23,8 @@ export class BillingService {
         private paymentRepository: Repository<Payment>,
         private teamService: TeamService,
         private dataSource: DataSource,
+        private configService: ConfigService,
+        private stripeConfig: StripeConfig,
     ) {}
 
     async createPlan(planData: Partial<Plan>): Promise<Plan> {
@@ -37,7 +42,7 @@ export class BillingService {
         return this.planRepository.find();
     }
 
-    async createSubscription(teamId: string, planId: number): Promise<Subscription> {
+    async createSubscription(teamId: string, planId: number, paymentMethod: string): Promise<{ subscription: Subscription; checkoutUrl: string }> {
         const team = await this.teamService.findById(teamId);
         if (!team) throw new NotFoundException('Team not found');
 
@@ -59,10 +64,41 @@ export class BillingService {
             status: SubscriptionStatus.PENDING,
         });
 
-        return this.subscriptionRepository.save(subscription);
+        const savedSubscription = await this.subscriptionRepository.save(subscription);
+        const invoice = await this.createInvoice(savedSubscription.id);
+
+        // Create or get Stripe customer
+        const stripe = this.stripeConfig.getStripe();
+        let customer = await stripe.customers.search({
+            query: `metadata['teamId']:'${teamId}'`,
+        }).then(result => result.data[0]);
+
+        if (!customer) {
+            customer = await stripe.customers.create({
+                metadata: { teamId },
+            });
+        }
+
+        // Create Stripe checkout session
+        const session = await this.stripeConfig.createCheckoutSession({
+            priceId: plan.stripePriceId,
+            customerId: customer.id,
+            successUrl: `${this.configService.get('FRONTEND_URL')}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancelUrl: `${this.configService.get('FRONTEND_URL')}/billing/cancel`,
+            metadata: {
+                subscriptionId: String(savedSubscription.id),
+                invoiceId: String(invoice.id),
+                teamId,
+            },
+        });
+
+        return {
+            subscription: savedSubscription,
+            checkoutUrl: session.url,
+        };
     }
 
-    async createInvoice(subscriptionId: number): Promise<Invoice> {
+    async createInvoice(subscriptionId: string): Promise<Invoice> {
         const subscription = await this.subscriptionRepository.findOne({
             where: { id: subscriptionId },
             relations: ['plan'],
@@ -85,7 +121,22 @@ export class BillingService {
         return this.invoiceRepository.save(invoice);
     }
 
-    async processPayment(invoiceId: number, paymentData: Partial<Payment>): Promise<Payment> {
+    async handleStripeWebhook(payload: Buffer, signature: string): Promise<void> {
+        const event = await this.stripeConfig.handleWebhookEvent(payload, signature);
+
+        if (event.type === 'checkout.session.completed') {
+            const session = event.data.object as Stripe.Checkout.Session;
+            const { subscriptionId, invoiceId } = session.metadata;
+
+            await this.processStripePayment(invoiceId, {
+                amountPaid: session.amount_total / 100,
+                paymentMethod: 'stripe',
+                transactionId: session.payment_intent as string
+            });
+        }
+    }
+
+    private async processStripePayment(invoiceId: string, paymentData: Partial<Payment>): Promise<Payment> {
         const queryRunner = this.dataSource.createQueryRunner();
         await queryRunner.connect();
         await queryRunner.startTransaction();

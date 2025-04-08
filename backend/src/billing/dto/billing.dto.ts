@@ -47,6 +47,14 @@ export class CreateSubscriptionDto {
 
     @ApiProperty({ description: 'Plan ID' })
     planId: number;
+
+    @ApiProperty({ description: 'Payment method (stripe)' })
+    paymentMethod: string;
+}
+
+export class SubscriptionWithCheckoutDto extends SubscriptionResponseDto {
+    @ApiProperty({ description: 'Stripe checkout URL' })
+    checkoutUrl: string;
 }
 
 export class InvoiceResponseDto {
@@ -95,4 +103,7 @@ export class ProcessPaymentDto {
 
     @ApiProperty({ description: 'Payment method' })
     paymentMethod: string;
+
+    @ApiProperty({ description: 'Stripe session ID', required: false })
+    stripeSessionId?: string;
 }

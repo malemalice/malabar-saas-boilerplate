@@ -1,4 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne } from 'typeorm';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
 import { Invoice } from './invoice.entity';
 
 export enum PaymentStatus {
@@ -8,13 +8,14 @@ export enum PaymentStatus {
 
 @Entity('payments')
 export class Payment {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
     @Column({ name: 'invoice_id' })
-    invoiceId: number;
+    invoiceId: string;
 
     @ManyToOne(() => Invoice, invoice => invoice.payments)
+    @JoinColumn({ name: 'invoice_id' }) // Ajoutez cette ligne pour la relation ManyToOne avec Invoice
     invoice: Invoice;
 
     @Column({ name: 'payment_method', length: 50 })
