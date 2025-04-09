@@ -4,7 +4,7 @@ import { DataSource } from 'typeorm';
 import { app } from '../setup';
 import { BillingService } from '../../src/billing/billing.service';
 import { Plan } from '../../src/billing/entities/plan.entity';
-import { Subscription } from '../../src/billing/entities/subscription.entity';
+import { Subscription, SubscriptionStatus } from '../../src/billing/entities/subscription.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { seedPlans } from '../utils/seed-plans';
@@ -12,6 +12,7 @@ import { User } from '../../src/user/user.entity';
 import { Team } from '../../src/team/team.entity';
 import { RoleType } from '../../src/role/role.entity';
 import { seedRoles } from '../utils/seed-roles';
+import { StripeConfig } from 'src/config/stripe.config';
 
 describe('BillingController - Subscriptions (e2e)', () => {
   let billingService: BillingService;
@@ -128,7 +129,7 @@ describe('BillingController - Subscriptions (e2e)', () => {
     it('should return 404 when team does not exist', async () => {
       const plans = await planRepository.find();
       const testPlan = plans[0];
-      const nonExistentTeamId = 'non-existent-team-id';
+      const nonExistentTeamId = '00000000-0000-4000-a000-000000000000';
 
       const response = await request(app.getHttpServer())
         .post('/billing/subscriptions')
@@ -139,7 +140,7 @@ describe('BillingController - Subscriptions (e2e)', () => {
           paymentMethod: 'stripe'
         });
 
-      expect(response.status).toBe(500);
+      expect(response.status).toBe(404);
     });
   });
 
