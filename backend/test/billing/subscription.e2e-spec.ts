@@ -1,18 +1,15 @@
-import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { DataSource } from 'typeorm';
 import { app } from '../setup';
 import { BillingService } from '../../src/billing/billing.service';
-import { Plan } from '../../src/billing/entities/plan.entity';
+import { BillingCycle, Plan } from '../../src/billing/entities/plan.entity';
 import { Subscription, SubscriptionStatus } from '../../src/billing/entities/subscription.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { seedPlans } from '../utils/seed-plans';
 import { User } from '../../src/user/user.entity';
 import { Team } from '../../src/team/team.entity';
-import { RoleType } from '../../src/role/role.entity';
 import { seedRoles } from '../utils/seed-roles';
-import { StripeConfig } from 'src/config/stripe.config';
 
 describe('BillingController - Subscriptions (e2e)', () => {
   let billingService: BillingService;
@@ -33,12 +30,11 @@ describe('BillingController - Subscriptions (e2e)', () => {
     teamRepository = app.get(getRepositoryToken(Team));
     subscriptionRepository = app.get(getRepositoryToken(Subscription));
     await dataSource.synchronize(true);
+    await seedRoles(dataSource);
+    await seedPlans(dataSource);
   });
 
   beforeEach(async () => {
-    await dataSource.synchronize(true);
-    await seedRoles(dataSource);
-    await seedPlans(dataSource);
 
     // Create owner user
     const signupResponse = await request(app.getHttpServer())
@@ -94,6 +90,75 @@ describe('BillingController - Subscriptions (e2e)', () => {
         planId: testPlan.id,
       });
       expect(typeof response.body.checkoutUrl).toBe('string');
+    });
+
+    it('should set correct dates for new monthly subscription with existing active subscription', async () => {
+      const plans = await planRepository.find();
+      const testPlan = plans[0];
+      
+      // Create an existing active subscription
+      const existingStartDate = new Date();
+      const existingEndDate = new Date(existingStartDate);
+      existingEndDate.setMonth(existingEndDate.getMonth() + 1);
+      
+      const existingSubscription = await subscriptionRepository.save({
+        teamId: team.id,
+        planId: testPlan.id,
+        startDate: existingStartDate,
+        endDate: existingEndDate,
+        status: SubscriptionStatus.ACTIVE
+      });
+
+      const response = await request(app.getHttpServer())
+        .post('/billing/subscriptions')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          teamId: team.id,
+          planId: testPlan.id,
+          paymentMethod: 'stripe'
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body.subscription.startDate).toBe(existingEndDate.toISOString().split('T')[0] + 'T00:00:00.000Z');
+      const expectedEndDate = new Date(existingEndDate);
+      expectedEndDate.setMonth(expectedEndDate.getMonth() + 1);
+      expect(response.body.subscription.endDate).toBe(expectedEndDate.toISOString().split('T')[0] + 'T00:00:00.000Z');
+    });
+
+    it('should set correct dates for new yearly subscription with existing active subscription', async () => {
+      const plans = await planRepository.find();
+      const yearlyPlan = await planRepository.save({
+        ...plans[0],
+        billingCycle: BillingCycle.YEARLY
+      });
+      
+      // Create an existing active subscription
+      const existingStartDate = new Date();
+      const existingEndDate = new Date(existingStartDate);
+      existingEndDate.setFullYear(existingEndDate.getFullYear() + 1);
+      
+      const existingSubscription = await subscriptionRepository.save({
+        teamId: team.id,
+        planId: yearlyPlan.id,
+        startDate: existingStartDate,
+        endDate: existingEndDate,
+        status: SubscriptionStatus.ACTIVE
+      });
+
+      const response = await request(app.getHttpServer())
+        .post('/billing/subscriptions')
+        .set('Authorization', `Bearer ${accessToken}`)
+        .send({
+          teamId: team.id,
+          planId: yearlyPlan.id,
+          paymentMethod: 'stripe'
+        });
+
+      expect(response.status).toBe(201);
+      expect(response.body.subscription.startDate).toBe(existingEndDate.toISOString().split('T')[0] + 'T00:00:00.000Z');
+      const expectedEndDate = new Date(existingEndDate);
+      expectedEndDate.setFullYear(expectedEndDate.getFullYear() + 1);
+      expect(response.body.subscription.endDate).toBe(expectedEndDate.toISOString().split('T')[0] + 'T00:00:00.000Z');
     });
 
     it('should return 401 when not authenticated', async () => {
