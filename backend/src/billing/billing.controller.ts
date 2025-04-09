@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Headers, RawBodyRequest, Res, Req } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Headers, RawBodyRequest, Res, Req, NotFoundException } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiHeader } from '@nestjs/swagger';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -70,6 +70,21 @@ export class BillingController {
     @Roles(RoleType.BILLING)
     async getTeamInvoices(@Param('teamId') teamId: string): Promise<Invoice[]> {
         return this.billingService.getTeamInvoices(teamId);
+    }
+
+    @ApiOperation({ summary: 'Get team active plan' })
+    @ApiResponse({ status: 200, description: 'Returns the team active plan', type: PlanResponseDto })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @ApiResponse({ status: 403, description: 'Forbidden - Requires billing role' })
+    @ApiResponse({ status: 404, description: 'Team not found or no active plan' })
+    @Get('teams/:teamId/active-plan')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    async getTeamActivePlan(@Param('teamId') teamId: string): Promise<Plan> {
+        const subscription = await this.billingService.getTeamSubscription(teamId);
+        if (!subscription || !subscription.plan) {
+            throw new NotFoundException('No active plan found for the team');
+        }
+        return subscription.plan;
     }
 
     @ApiOperation({ summary: 'Handle Stripe webhook events' })

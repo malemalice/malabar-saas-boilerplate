@@ -68,6 +68,60 @@ describe('BillingController - Subscriptions (e2e)', () => {
     });
   });
 
+  describe('GET /teams/:teamId/active-plan', () => {
+    it('should return active plan for team with active subscription', async () => {
+      const plans = await planRepository.find();
+      const testPlan = plans[0];
+      
+      // Create active subscription
+      const subscription = await subscriptionRepository.save({
+        teamId: team.id,
+        planId: testPlan.id,
+        startDate: new Date(),
+        endDate: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+        status: SubscriptionStatus.ACTIVE,
+        plan: testPlan
+      });
+
+      const response = await request(app.getHttpServer())
+        .get(`/billing/teams/${team.id}/active-plan`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toMatchObject({
+        id: testPlan.id,
+        name: testPlan.name,
+        price: testPlan.price,
+        billingCycle: testPlan.billingCycle
+      });
+    });
+
+    it('should return free plan when team has no active subscription', async () => {
+      const freePlan = await planRepository.findOne({
+        where: { name: 'Free' }
+      });
+
+      const response = await request(app.getHttpServer())
+        .get(`/billing/teams/${team.id}/active-plan`)
+        .set('Authorization', `Bearer ${accessToken}`);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toMatchObject({
+        id: freePlan.id,
+        name: freePlan.name,
+        price: freePlan.price,
+        billingCycle: freePlan.billingCycle
+      });
+    });
+
+    it('should return 401 when not authenticated', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/billing/teams/${team.id}/active-plan`);
+
+      expect(response.status).toBe(401);
+    });
+  });
+
   describe('POST /billing/subscriptions', () => {
     it('should create subscription and return checkout URL', async () => {
       const plans = await planRepository.find();

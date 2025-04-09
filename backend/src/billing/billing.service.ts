@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource } from 'typeorm';
+import { Repository, DataSource, LessThanOrEqual, MoreThanOrEqual } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { Plan, BillingCycle } from './entities/plan.entity';
 import { Subscription, SubscriptionStatus } from './entities/subscription.entity';
@@ -188,10 +188,35 @@ export class BillingService {
     }
 
     async getTeamSubscription(teamId: string): Promise<Subscription> {
-        return this.subscriptionRepository.findOne({
-            where: { teamId, status: SubscriptionStatus.ACTIVE },
+        const currentDate = new Date();
+        const activeSubscription = await this.subscriptionRepository.findOne({
+            where: {
+                teamId,
+                status: SubscriptionStatus.ACTIVE,
+                startDate: LessThanOrEqual(currentDate),
+                endDate: MoreThanOrEqual(currentDate)
+            },
             relations: ['plan'],
         });
+
+        if (!activeSubscription) {
+            // Get the free plan
+            const freePlan = await this.planRepository.findOne({
+                where: { name: 'Free' }
+            });
+            
+            // Create a virtual subscription with the free plan
+            const virtualSubscription = new Subscription();
+            virtualSubscription.teamId = teamId;
+            virtualSubscription.plan = freePlan;
+            virtualSubscription.status = SubscriptionStatus.ACTIVE;
+            virtualSubscription.startDate = new Date();
+            virtualSubscription.endDate = new Date(8640000000000000); // Set to max date
+            
+            return virtualSubscription;
+        }
+
+        return activeSubscription;
     }
 
     async getTeamInvoices(teamId: string): Promise<Invoice[]> {
