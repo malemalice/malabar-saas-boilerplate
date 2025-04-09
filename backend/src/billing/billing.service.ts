@@ -219,11 +219,22 @@ export class BillingService {
         return activeSubscription;
     }
 
-    async getTeamInvoices(teamId: string): Promise<Invoice[]> {
-        return this.invoiceRepository.find({
+    async getTeamInvoices(teamId: string, options: { page: number; limit: number }): Promise<{ items: Invoice[]; total: number; page: number; limit: number }> {
+        const skip = (options.page - 1) * options.limit;
+
+        const [items, total] = await this.invoiceRepository.findAndCount({
             where: { teamId },
             relations: ['subscription', 'payments'],
             order: { createdAt: 'DESC' },
+            skip,
+            take: options.limit
         });
+
+        return {
+            items,
+            total,
+            page: options.page,
+            limit: options.limit
+        };
     }
 }

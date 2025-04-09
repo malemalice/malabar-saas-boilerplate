@@ -59,13 +59,13 @@ export class SubscriptionWithCheckoutDto extends SubscriptionResponseDto {
 
 export class InvoiceResponseDto {
     @ApiProperty({ description: 'Invoice ID' })
-    id: number;
+    id: string;
 
     @ApiProperty({ description: 'Team ID' })
     teamId: string;
 
     @ApiProperty({ description: 'Subscription ID' })
-    subscriptionId: number;
+    subscriptionId: string;
 
     @ApiProperty({ description: 'Invoice amount' })
     amount: number;
@@ -106,4 +106,32 @@ export class ProcessPaymentDto {
 
     @ApiProperty({ description: 'Stripe session ID', required: false })
     stripeSessionId?: string;
+}
+
+export class PaginationMetaDto {
+    @ApiProperty({ description: 'Current page number' })
+    currentPage: number;
+
+    @ApiProperty({ description: 'Number of items per page' })
+    itemsPerPage: number;
+
+    @ApiProperty({ description: 'Total number of items' })
+    totalItems: number;
+
+    @ApiProperty({ description: 'Total number of pages' })
+    totalPages: number;
+
+    @ApiProperty({ description: 'Flag indicating if there is a next page' })
+    hasNextPage: boolean;
+
+    @ApiProperty({ description: 'Flag indicating if there is a previous page' })
+    hasPreviousPage: boolean;
+}
+
+export class PaginatedInvoiceResponseDto {
+    @ApiProperty({ description: 'Array of invoices', type: [InvoiceResponseDto] })
+    items: InvoiceResponseDto[];
+
+    @ApiProperty({ description: 'Pagination metadata', type: PaginationMetaDto })
+    meta: PaginationMetaDto;
 }

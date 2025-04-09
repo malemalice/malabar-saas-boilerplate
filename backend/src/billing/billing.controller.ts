@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Headers, RawBodyRequest, Res, Req, NotFoundException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Headers, RawBodyRequest, Res, Req, NotFoundException, Query, ParseIntPipe, DefaultValuePipe } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiHeader } from '@nestjs/swagger';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -10,7 +10,7 @@ import { Plan } from './entities/plan.entity';
 import { Subscription } from './entities/subscription.entity';
 import { Invoice } from './entities/invoice.entity';
 import { Payment } from './entities/payment.entity';
-import { PlanResponseDto, SubscriptionResponseDto, CreateSubscriptionDto, InvoiceResponseDto, PaymentResponseDto, ProcessPaymentDto } from './dto/billing.dto';
+import { PlanResponseDto, SubscriptionResponseDto, CreateSubscriptionDto, InvoiceResponseDto, PaymentResponseDto, ProcessPaymentDto, PaginatedInvoiceResponseDto } from './dto/billing.dto';
 
 @ApiTags('billing')
 @ApiBearerAuth()
@@ -60,16 +60,41 @@ export class BillingController {
         return this.billingService.getTeamSubscription(teamId);
     }
 
-    @ApiOperation({ summary: 'Get team invoices' })
-    @ApiResponse({ status: 200, description: 'Returns the team invoices', type: [InvoiceResponseDto] })
+    @ApiOperation({ summary: 'Get team invoices with pagination' })
+    @ApiResponse({ status: 200, description: 'Returns paginated team invoices', type: PaginatedInvoiceResponseDto })
     @ApiResponse({ status: 401, description: 'Unauthorized' })
     @ApiResponse({ status: 403, description: 'Forbidden - Requires billing role' })
     @ApiResponse({ status: 404, description: 'Team not found' })
     @Get('teams/:teamId/invoices')
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles(RoleType.BILLING)
-    async getTeamInvoices(@Param('teamId') teamId: string): Promise<Invoice[]> {
-        return this.billingService.getTeamInvoices(teamId);
+    async getTeamInvoices(
+        @Param('teamId') teamId: string,
+        @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
+        @Query('limit', new DefaultValuePipe(10), ParseIntPipe) limit: number = 10,
+    ): Promise<PaginatedInvoiceResponseDto> {
+        if (limit > 100) limit = 100; // Maximum limit per page
+        const result = await this.billingService.getTeamInvoices(teamId, { page, limit });
+        
+        return {
+            items: result.items.map(invoice => ({
+                id: invoice.id,
+                teamId: invoice.teamId,
+                subscriptionId: invoice.subscription?.id,
+                amount: invoice.amount,
+                status: invoice.status,
+                issuedDate: invoice.createdAt,
+                dueDate: invoice.dueDate
+            })),
+            meta: {
+                currentPage: result.page,
+                itemsPerPage: result.limit,
+                totalItems: result.total,
+                totalPages: Math.ceil(result.total / result.limit),
+                hasNextPage: result.page * result.limit < result.total,
+                hasPreviousPage: result.page > 1
+            }
+        };
     }
 
     @ApiOperation({ summary: 'Get team active plan' })
