@@ -67,7 +67,7 @@ export class BillingController {
     @ApiResponse({ status: 404, description: 'Team not found' })
     @Get('teams/:teamId/invoices')
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles(RoleType.BILLING)
+    @Roles(RoleType.BILLING, RoleType.OWNER)
     async getTeamInvoices(
         @Param('teamId') teamId: string,
         @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number = 1,
