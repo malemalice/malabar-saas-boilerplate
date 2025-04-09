@@ -9,6 +9,7 @@ import { Payment, PaymentStatus } from './entities/payment.entity';
 import { TeamService } from '../team/team.service';
 import { StripeConfig } from '../config/stripe.config';
 import Stripe from 'stripe';
+import { UsageCounter } from './entities/usage-counter.entity';
 
 @Injectable()
 export class BillingService {
@@ -21,6 +22,8 @@ export class BillingService {
         private invoiceRepository: Repository<Invoice>,
         @InjectRepository(Payment)
         private paymentRepository: Repository<Payment>,
+        @InjectRepository(UsageCounter)
+        private usageCounterRepository: Repository<UsageCounter>,
         private teamService: TeamService,
         private dataSource: DataSource,
         private configService: ConfigService,
@@ -236,5 +239,81 @@ export class BillingService {
             page: options.page,
             limit: options.limit
         };
+    }
+
+    async initializeUsageCounter(teamId: string): Promise<UsageCounter> {
+        const existingCounter = await this.usageCounterRepository.findOne({
+            where: { teamId }
+        });
+
+        if (existingCounter) {
+            return existingCounter;
+        }
+
+        // Get the team's active subscription and plan
+        const subscription = await this.getTeamSubscription(teamId);
+        
+        const features = {};
+        if (subscription.plan.features) {
+            subscription.plan.features.forEach(feature => {
+                features[feature.metric] = {
+                    label: feature.label,
+                    value: feature.value,
+                    usage: 0
+                };
+            });
+        }
+
+        const counter = this.usageCounterRepository.create({
+            teamId,
+            features,
+            last_reset_date: new Date()
+        });
+
+        return this.usageCounterRepository.save(counter);
+    }
+
+    async updateUsageCounter(teamId: string, feature: string, value: number): Promise<UsageCounter> {
+        const counter = await this.usageCounterRepository.findOne({
+            where: { teamId }
+        });
+
+        if (!counter) {
+            throw new NotFoundException('Usage counter not found for team');
+        }
+
+        counter.features = {
+            ...counter.features,
+            [feature]: (counter.features[feature] || 0) + value
+        };
+
+        return this.usageCounterRepository.save(counter);
+    }
+
+    async resetUsageCounter(teamId: string): Promise<UsageCounter> {
+        const counter = await this.usageCounterRepository.findOne({
+            where: { teamId }
+        });
+
+        if (!counter) {
+            throw new NotFoundException('Usage counter not found for team');
+        }
+
+        counter.features = {};
+        counter.last_reset_date = new Date();
+
+        return this.usageCounterRepository.save(counter);
+    }
+
+    async getUsageCounter(teamId: string): Promise<UsageCounter> {
+        const counter = await this.usageCounterRepository.findOne({
+            where: { teamId }
+        });
+
+        if (!counter) {
+            throw new NotFoundException('Usage counter not found for team');
+        }
+
+        return counter;
     }
 }

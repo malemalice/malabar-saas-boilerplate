@@ -136,8 +136,6 @@ describe('BillingController - Invoices (e2e)', () => {
       const response = await request(app.getHttpServer())
         .get(`/billing/teams/${team.id}/invoices?page=2&limit=5`)
         .set('Authorization', `Bearer ${accessToken}`);
-        console.log(response);
-        console.log(accessToken);
 
       expect(response.status).toBe(200);
       expect(response.body.items).toHaveLength(5);

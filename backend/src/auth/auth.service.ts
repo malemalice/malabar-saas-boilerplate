@@ -49,9 +49,7 @@ export class AuthService {
       await this.teamService.acceptInvitation(null, user.id, invitationToken);
     } else {
       // Create a team for the new user with their name as team name
-      // const team = 
       await this.teamService.createTeam(name, user.id);
-      // await this.teamService.addMember(team.id, user.id);
     }
 
     const accessToken = this.generateAccessToken(user.id);
