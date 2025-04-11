@@ -1,11 +1,13 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import axios from '@/lib/axios';
+import { TeamRole, TEAM_ROLES } from '@/constants/teamRoles';
+import { FirstLetterUpper } from '@/lib/utils';
 
 interface TeamMember {
   userId: string;
   name: string;
   email: string;
-  role: 'Owner' | 'Admin' | 'Billing';
+  role: TeamRole;
   status: 'Active' | 'Pending' | 'Inactive';
 }
 
@@ -13,7 +15,7 @@ interface TeamContextType {
   members: TeamMember[];
   loading: boolean;
   error: string | null;
-  activeTeam: { id: string; name: string; role: 'Owner' | 'Admin' | 'Billing' } | null;
+  activeTeam: { id: string; name: string; role: TeamRole } | null;
   fetchMembers: () => Promise<void>;
   inviteMember: (email: string, role: string) => Promise<void>;
   switchTeam: (teamId: string, teamName: string) => void;
@@ -27,11 +29,11 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [activeTeam, setActiveTeam] = useState<{ id: string; name: string; role: 'Owner' | 'Admin' | 'Billing' } | null>(() => {
+  const [activeTeam, setActiveTeam] = useState<{ id: string; name: string; role: TeamRole } | null>(() => {
     const storedTeamId = localStorage.getItem('activeTeamId');
     const storedTeamName = localStorage.getItem('activeTeamName');
     const storedRole = localStorage.getItem('activeTeamRole');
-    return storedTeamId && storedTeamName && storedRole ? { id: storedTeamId, name: storedTeamName, role: storedRole as 'Owner' | 'Admin' | 'Billing' } : null;
+    return storedTeamId && storedTeamName && storedRole ? { id: storedTeamId, name: storedTeamName, role: storedRole as TeamRole } : null;
   });
 
   const fetchMembers = async () => {
@@ -46,7 +48,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
       const transformedMembers = teamData.members.map((member: any) => {
         let role = member.role;
         if (member.userId === teamData.ownerId) {
-          role = 'Owner';
+          role = TEAM_ROLES.OWNER;
         }
         
         return {
@@ -64,9 +66,8 @@ export function TeamProvider({ children }: { children: ReactNode }) {
       const currentUserMember = transformedMembers.find((member: TeamMember) => member.email === userData.email);
       if (currentUserMember && activeTeam) {
         const newActiveTeam = { ...activeTeam, role: currentUserMember.role };
-        console.log(currentUserMember)
         setActiveTeam(newActiveTeam);
-        localStorage.setItem('activeTeamRole', currentUserMember.role);
+        localStorage.setItem('activeTeamRole',  FirstLetterUpper(currentUserMember.role));
       }
     } catch (err) {
       setError('Failed to fetch team members');
@@ -120,7 +121,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('activeTeamId', teamId);
     localStorage.setItem('activeTeamName', teamName);
     const storedRole = localStorage.getItem('activeTeamRole');
-    setActiveTeam({ id: teamId, name: teamName, role: storedRole as 'Owner' | 'Admin' | 'Billing' });
+    setActiveTeam({ id: teamId, name: teamName, role: storedRole as TeamRole });
     fetchMembers();
   };
 

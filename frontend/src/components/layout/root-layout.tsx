@@ -18,6 +18,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { TeamSwitchModal } from '../modals/TeamSwitchModal';
 import { Toaster } from "@/components/ui/toaster";
 import { useTeam } from '@/contexts/TeamContext';
+import { TEAM_ROLES } from '@/constants/teamRoles';
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
   const { user, logout } = useAuth();
@@ -97,14 +98,16 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Link to="/team" className="w-full">
-                    Team
+                    Team {activeTeam?.role}
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Link to="/billing" className="w-full">
-                    Billing {activeTeam?.role}
-                  </Link>
-                </DropdownMenuItem>
+                {(activeTeam?.role === TEAM_ROLES.OWNER || activeTeam?.role === TEAM_ROLES.BILLING) && (
+                  <DropdownMenuItem>
+                    <Link to="/billing" className="w-full">
+                      Billing
+                    </Link>
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout}>
                   Logout

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { TEAM_ROLES } from '@/constants/roles';
+import { TEAM_ROLES } from '@/constants/teamRoles';
 import { useTeam } from '@/contexts/TeamContext';
 import {
   Dialog,
@@ -44,7 +44,7 @@ export function InviteTeamModal() {
 
   const onSubmit = async (data: InviteFormValues) => {
     try {
-      await inviteMember(data.email, data.role);
+      await inviteMember(data.email, data.role.toLowerCase());
       setOpen(false);
       form.reset();
     } catch (error) {
