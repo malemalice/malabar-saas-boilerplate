@@ -227,7 +227,7 @@ export class BillingService {
 
         const [items, total] = await this.invoiceRepository.findAndCount({
             where: { teamId },
-            relations: ['subscription', 'payments'],
+            relations: ['subscription', 'payments','subscription.plan'],
             order: { createdAt: 'DESC' },
             skip,
             take: options.limit

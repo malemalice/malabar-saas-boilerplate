@@ -1,60 +1,30 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useInvoices } from '@/hooks/useInvoices';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-interface Invoice {
-  id: string;
-  issuedAt: string;
-  plan: string;
-  dueDate: string;
-  total: number;
-  status: 'paid' | 'unpaid';
-}
+import { useTeam } from '@/contexts/TeamContext';
+import { TEAM_ROLES } from '@/constants/teamRoles';
 
 const Billing = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const [rowsPerPage, setRowsPerPage] = useState('10');
   const [currentPage, setCurrentPage] = useState(1);
-  const [invoices, setInvoices] = useState<Invoice[]>([
-    {
-      id: '1',
-      issuedAt: '2025-04-20',
-      plan: 'Premium',
-      dueDate: '2025-04-27',
-      total: 10,
-      status: 'unpaid'
-    },
-    {
-      id: '2',
-      issuedAt: '2025-03-20',
-      plan: 'Premium',
-      dueDate: '2025-04-27',
-      total: 10,
-      status: 'paid'
-    },
-    {
-      id: '3',
-      issuedAt: '2025-03-20',
-      plan: 'Free',
-      dueDate: '2025-04-27',
-      total: 0,
-      status: 'paid'
-    }
-  ]);
+  const { invoices, loading, error, meta, fetchInvoices } = useInvoices();
+  const {activeTeam} = useTeam();
 
   useEffect(() => {
-    // Check if user has required role
-    // const hasAccess = user?.role === 'owner' || user?.role === 'billing';
-    const hasAccess = true;
+    fetchInvoices(currentPage, parseInt(rowsPerPage));
+  }, [currentPage, rowsPerPage]);
+
+  useEffect(() => {
+    const hasAccess = activeTeam?.role === TEAM_ROLES.OWNER || activeTeam?.role === TEAM_ROLES.BILLING;
     if (!hasAccess) {
       navigate('/dashboard');
     }
-  }, [user, navigate]);
+  }, [activeTeam, navigate]);
 
   const handlePay = (invoiceId: string) => {
     // Handle payment logic here
@@ -127,27 +97,41 @@ const Billing = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {invoices.map((invoice) => (
-                <TableRow key={invoice.id}>
-                  <TableCell>{invoice.issuedAt}</TableCell>
-                  <TableCell>{invoice.plan}</TableCell>
-                  <TableCell>{invoice.dueDate}</TableCell>
-                  <TableCell>${invoice.total}</TableCell>
-                  <TableCell>
-                    <span className={`capitalize ${invoice.status === 'paid' ? 'text-green-600' : 'text-red-600'}`}>
-                      {invoice.status}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    {invoice.status === 'unpaid' && (
-                      <div className="flex gap-2">
-                        <Button size="sm" onClick={() => handlePay(invoice.id)}>Pay</Button>
-                        <Button size="sm" variant="outline" onClick={() => handleCancel(invoice.id)}>Cancel</Button>
-                      </div>
-                    )}
-                  </TableCell>
+              {loading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center">Loading...</TableCell>
                 </TableRow>
-              ))}
+              ) : error ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center text-red-600">{error}</TableCell>
+                </TableRow>
+              ) : invoices.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center">No invoices found</TableCell>
+                </TableRow>
+              ) : (
+                invoices.map((invoice) => (
+                  <TableRow key={invoice.id}>
+                    <TableCell>{new Date(invoice.issuedDate).toLocaleDateString()}</TableCell>
+                    <TableCell>{invoice.subscriptionId}</TableCell>
+                    <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
+                    <TableCell>${invoice.amount}</TableCell>
+                    <TableCell>
+                      <span className={`capitalize ${invoice.status.toLowerCase() === 'paid' ? 'text-green-600' : 'text-red-600'}`}>
+                        {invoice.status}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      {invoice.status.toLowerCase() === 'unpaid' && (
+                        <div className="flex gap-2">
+                          <Button size="sm" onClick={() => handlePay(invoice.id)}>Pay</Button>
+                          <Button size="sm" variant="outline" onClick={() => handleCancel(invoice.id)}>Cancel</Button>
+                        </div>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
 
@@ -168,13 +152,13 @@ const Billing = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-sm">Page 1 of 10</span>
+              <span className="text-sm">Page {meta?.currentPage || 1} of {meta?.totalPages || 1}</span>
               <div className="flex gap-1">
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
+                  disabled={!meta?.hasPreviousPage}
                 >
                   &lt;
                 </Button>
@@ -182,7 +166,7 @@ const Billing = () => {
                   variant="outline"
                   size="icon"
                   onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage === 10}
+                  disabled={!meta?.hasNextPage}
                 >
                   &gt;
                 </Button>

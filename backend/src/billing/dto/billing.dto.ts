@@ -67,6 +67,12 @@ export class InvoiceResponseDto {
     @ApiProperty({ description: 'Subscription ID' })
     subscriptionId: string;
 
+    @ApiProperty({ description: 'Plan ID' })
+    planId: number;
+
+    @ApiProperty({ description: 'Plan name' })
+    planName: string;
+
     @ApiProperty({ description: 'Invoice amount' })
     amount: number;
 

@@ -81,6 +81,8 @@ export class BillingController {
                 id: invoice.id,
                 teamId: invoice.teamId,
                 subscriptionId: invoice.subscription?.id,
+                planId: invoice.subscription?.plan?.id,
+                planName: invoice.subscription?.plan?.name,
                 amount: invoice.amount,
                 status: invoice.status,
                 issuedDate: invoice.createdAt,
