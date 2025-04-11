@@ -5,6 +5,8 @@ import { RoleChangeModal } from '@/components/modals/RoleChangeModal';
 import { DeleteMemberModal } from '@/components/modals/DeleteMemberModal';
 import { Badge } from '@/components/ui/badge';
 import { useState } from 'react';
+import { FirstLetterUpper } from '@/lib/utils';
+import { TEAM_ROLES } from '@/constants/teamRoles';
 
 const Team = () => {
   const { members, loading, error, activeTeam } = useTeam();
@@ -74,7 +76,7 @@ const Team = () => {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {member.role}
+                  {FirstLetterUpper(member.role)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <Badge status={member.status.toLowerCase() as "active" | "inviting" | "reject"}>
@@ -92,8 +94,8 @@ const Team = () => {
                       });
                       setIsRoleModalOpen(true);
                     }}
-                    disabled={member.role === 'Owner'}
-                    style={{ opacity: member.role === 'Owner' ? 0.5 : 1 }}
+                    disabled={member.role === TEAM_ROLES.OWNER}
+                    style={{ opacity: member.role === TEAM_ROLES.OWNER ? 0.5 : 1 }}
                   >
                     <Pencil className="h-4 w-4" />
                   </button>
@@ -106,8 +108,8 @@ const Team = () => {
                       });
                       setIsDeleteModalOpen(true);
                     }}
-                    disabled={member.role === 'Owner'}
-                    style={{ opacity: member.role === 'Owner' ? 0.5 : 1 }}
+                    disabled={member.role === TEAM_ROLES.OWNER}
+                    style={{ opacity: member.role === TEAM_ROLES.OWNER ? 0.5 : 1 }}
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>

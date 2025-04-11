@@ -43,3 +43,6 @@ coverage/
 .cache/
 .temp/
 .tmp/
+
+#test
+backend/coverage*
