@@ -77,8 +77,27 @@ export function TeamProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    fetchMembers();
-  }, []);
+    const initializeTeam = async () => {
+      if (!activeTeam) {
+        try {
+          const { data: teams } = await axios.get('/api/teams/joined');
+          if (teams.length > 0) {
+            localStorage.setItem('activeTeamId', teams[0].id);
+            localStorage.setItem('activeTeamName', teams[0].name);
+            setActiveTeam({ id: teams[0].id, name: teams[0].name, role: teams[0].role });
+          }
+        } catch (err) {
+          console.error('Failed to fetch teams:', err);
+          setError('Failed to initialize team');
+        }
+      }
+      if (activeTeam?.id) {
+        await fetchMembers();
+      }
+    };
+    
+    initializeTeam();
+  }, [activeTeam?.id]);
 
   const inviteMember = async (email: string, role: string) => {
     try {
