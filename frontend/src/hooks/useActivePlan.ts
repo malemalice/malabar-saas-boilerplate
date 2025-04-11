@@ -8,10 +8,11 @@ interface Plan {
   description: string;
   price: number;
   billingCycle: string;
-  features?: {
-    maxUsers: number;
-    maxSubmissionsPerMonth: number;
-  };
+  features?: Array<{
+    label: string;
+    metric: string;
+    value: number;
+  }>;
 }
 
 export function useActivePlan() {
@@ -27,7 +28,7 @@ export function useActivePlan() {
       try {
         setLoading(true);
         setError(null);
-        const response = await axios.get(`/billing/teams/${activeTeam.id}/active-plan`);
+        const response = await axios.get(`/api/billing/teams/${activeTeam.id}/active-plan`);
         setPlan(response.data);
       } catch (err: any) {
         setError(err.response?.data?.message || 'Failed to fetch active plan');

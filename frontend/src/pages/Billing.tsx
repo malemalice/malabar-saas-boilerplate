@@ -49,17 +49,48 @@ const Billing = () => {
             <CardTitle>Current Plan</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-2xl font-bold mb-1">Free</h3>
-                <p className="text-sm text-muted-foreground">5 User</p>
-                <p className="text-sm text-muted-foreground">100 Submissions/Month</p>
+            {planLoading ? (
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-2xl font-bold mb-1">Loading...</h3>
+                  <p className="text-sm text-muted-foreground">Please wait</p>
+                </div>
               </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold mb-2">$0</p>
-                <Button>Upgrade</Button>
+            ) : planError ? (
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-2xl font-bold mb-1 text-red-600">Error</h3>
+                  <p className="text-sm text-muted-foreground">{planError}</p>
+                </div>
               </div>
-            </div>
+            ) : plan ? (
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-2xl font-bold mb-1">{plan.name}</h3>
+                  {plan.features?.map((feature) => (
+                    <p key={feature.metric} className="text-sm text-muted-foreground">
+                      {feature.label}
+                    </p>
+                  ))}
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold mb-2">${plan.price}</p>
+                  <Button onClick={() => navigate('/plans')}>Upgrade</Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-2xl font-bold mb-1">Free</h3>
+                  <p className="text-sm text-muted-foreground">5 Users</p>
+                  <p className="text-sm text-muted-foreground">100 Submissions/Month</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold mb-2">$0</p>
+                  <Button onClick={() => navigate('/plans')}>Upgrade</Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -80,8 +111,8 @@ const Billing = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-lg font-medium mb-1">{plan.name} Plan</h3>
-                  <p className="text-sm text-muted-foreground">{plan.features?.maxUsers || 'Unlimited'} Users</p>
-                  <p className="text-sm text-muted-foreground">{plan.features?.maxSubmissionsPerMonth || 'Unlimited'} Submissions/Month</p>
+                  <p className="text-sm text-muted-foreground">Unlimited Users</p>
+                  <p className="text-sm text-muted-foreground">Unlimited Submissions/Month</p>
                 </div>
                 <div className="text-right">
                   <p className="text-sm text-muted-foreground">Next Reset: {new Date().toLocaleDateString()}</p>

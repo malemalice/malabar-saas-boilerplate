@@ -15,6 +15,7 @@ import VerifyPending from './pages/VerifyPending';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Billing from './pages/Billing';
+import Plans from './pages/Plans';
 
 const queryClient = new QueryClient();
 
@@ -74,6 +75,16 @@ const App = () => {
                 <PrivateRoute>
                   <RootLayout>
                     <Billing />
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/plans"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
+                    <Plans />
                   </RootLayout>
                 </PrivateRoute>
               }
