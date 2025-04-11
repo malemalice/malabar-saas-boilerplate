@@ -102,7 +102,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Link to="/billing" className="w-full">
-                    Billing
+                    Billing {activeTeam?.role}
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />

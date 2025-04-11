@@ -14,6 +14,7 @@ import VerifyEmail from './pages/VerifyEmail';
 import VerifyPending from './pages/VerifyPending';
 import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
+import Billing from './pages/Billing';
 
 const queryClient = new QueryClient();
 
@@ -63,6 +64,16 @@ const App = () => {
                 <PrivateRoute>
                   <RootLayout>
                     <Team />
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/billing"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
+                    <Billing />
                   </RootLayout>
                 </PrivateRoute>
               }
