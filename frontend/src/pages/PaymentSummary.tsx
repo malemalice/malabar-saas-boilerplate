@@ -8,17 +8,22 @@ import { Button } from '@/components/ui/button';
 import { useActivePlan } from '@/hooks/useActivePlan';
 import { Plan } from '@/hooks/usePlans';
 import { useAuth } from '@/contexts/AuthContext';
+import axios from '@/lib/axios';
+import { toast, useToast } from '@/components/ui/use-toast';
+import { useTeam } from '@/contexts/TeamContext';
 
 const PaymentSummary = () => {
   const navigate = useNavigate();
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [paymentMethod, setPaymentMethod] = useState('midtrans');
   const { user } = useAuth();
+  const { activeTeam } = useTeam();
   const [billingInfo, setBillingInfo] = useState({
     name: '',
     email: '',
     phone: ''
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const storedPlan = localStorage.getItem('selectedPlan');
@@ -45,9 +50,28 @@ const PaymentSummary = () => {
     }));
   };
 
-  const handlePayment = () => {
-    // Handle payment logic here
-    console.log('Processing payment with:', { paymentMethod, billingInfo });
+  const handlePayment = async () => {
+    if (!selectedPlan) return;
+    
+    try {
+      setIsLoading(true);
+      const response = await axios.post('/api/billing/subscriptions', {
+        teamId: activeTeam?.id,
+        planId: selectedPlan.id,
+        paymentMethod
+      });
+      
+      window.location.href = response.data.checkoutUrl;
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to process payment. Please try again.',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -150,8 +174,9 @@ const PaymentSummary = () => {
             onClick={handlePayment}
             size="lg"
             className="px-8 bg-yellow-400 hover:bg-yellow-500 text-black"
+            disabled={isLoading}
           >
-            PAY &gt;&gt;
+            {isLoading ? 'Processing...' : 'PAY >>'}
           </Button>
         </div>
       </div>
