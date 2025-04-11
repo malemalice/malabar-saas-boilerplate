@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useInvoices } from '@/hooks/useInvoices';
+import { useActivePlan } from '@/hooks/useActivePlan';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -12,7 +13,8 @@ const Billing = () => {
   const navigate = useNavigate();
   const [rowsPerPage, setRowsPerPage] = useState('10');
   const [currentPage, setCurrentPage] = useState(1);
-  const { invoices, loading, error, meta, fetchInvoices } = useInvoices();
+  const { invoices, loading: invoicesLoading, error: invoicesError, meta, fetchInvoices } = useInvoices();
+  const { plan, loading: planLoading, error: planError } = useActivePlan();
   const {activeTeam} = useTeam();
 
   useEffect(() => {
@@ -66,16 +68,30 @@ const Billing = () => {
             <CardTitle>Usage</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-medium mb-1">Feature</h3>
-                <p className="text-sm text-muted-foreground">3 User</p>
-                <p className="text-sm text-muted-foreground">60 Submissions</p>
+            {planLoading ? (
+              <div className="flex justify-center py-4">
+                <p className="text-muted-foreground">Loading plan details...</p>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-muted-foreground">Next Reset: 2025-10-20</p>
+            ) : planError ? (
+              <div className="flex justify-center py-4">
+                <p className="text-red-600">{planError}</p>
               </div>
-            </div>
+            ) : plan ? (
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-medium mb-1">{plan.name} Plan</h3>
+                  <p className="text-sm text-muted-foreground">{plan.features?.maxUsers || 'Unlimited'} Users</p>
+                  <p className="text-sm text-muted-foreground">{plan.features?.maxSubmissionsPerMonth || 'Unlimited'} Submissions/Month</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground">Next Reset: {new Date().toLocaleDateString()}</p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex justify-center py-4">
+                <p className="text-muted-foreground">No active plan found</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -97,13 +113,13 @@ const Billing = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
+              {invoicesLoading ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center">Loading...</TableCell>
                 </TableRow>
-              ) : error ? (
+              ) : invoicesError ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-red-600">{error}</TableCell>
+                  <TableCell colSpan={6} className="text-center text-red-600">{invoicesError}</TableCell>
                 </TableRow>
               ) : invoices.length === 0 ? (
                 <TableRow>
