@@ -16,6 +16,7 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Billing from './pages/Billing';
 import Plans from './pages/Plans';
+import PaymentSummary from './pages/PaymentSummary';
 
 const queryClient = new QueryClient();
 
@@ -85,6 +86,16 @@ const App = () => {
                 <PrivateRoute>
                   <RootLayout>
                     <Plans />
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/payment-summary"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
+                    <PaymentSummary />
                   </RootLayout>
                 </PrivateRoute>
               }

@@ -50,8 +50,11 @@ const Plans = () => {
   };
 
   const handleSelect = (planName: string) => {
-    // Handle plan selection logic here
-    console.log('Selected plan:', planName);
+    const selectedPlan = plans.find(p => p.name === planName);
+    if (selectedPlan) {
+      localStorage.setItem('selectedPlan', JSON.stringify(selectedPlan));
+      navigate('/payment-summary');
+    }
   };
 
   return (
@@ -75,8 +78,8 @@ const Plans = () => {
                 </p>
               </div>
               <ul className="space-y-3 flex-1">
-                {plan.features?.map((feature) => (
-                  <li key={feature.metric} className="flex items-center">
+                {plan.features?.map((feature,i) => (
+                  <li key={`plan-${i}`} className="flex items-center">
                     <svg
                       className="w-5 h-5 text-green-500 mr-2"
                       fill="none"

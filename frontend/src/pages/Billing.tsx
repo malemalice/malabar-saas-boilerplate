@@ -67,8 +67,8 @@ const Billing = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-2xl font-bold mb-1">{plan.name}</h3>
-                  {plan.features?.map((feature) => (
-                    <p key={feature.metric} className="text-sm text-muted-foreground">
+                  {plan.features?.map((feature, index) => (
+                    <p key={index} className="text-sm text-muted-foreground">
                       {feature.label}
                     </p>
                   ))}

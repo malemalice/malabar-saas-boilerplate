@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from '@/lib/axios';
 
-interface Plan {
+export interface Plan {
   id: number;
   name: string;
   description: string;
