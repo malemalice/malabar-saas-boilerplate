@@ -1,4 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import PaymentSuccess from './pages/billing/PaymentSuccess';
+import PaymentFailed from './pages/billing/PaymentFailed';
 import PublicRoute from './components/auth/PublicRoute';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
@@ -17,6 +19,7 @@ import ResetPassword from './pages/ResetPassword';
 import Billing from './pages/Billing';
 import Plans from './pages/Plans';
 import PaymentSummary from './pages/PaymentSummary';
+import { Root } from '@radix-ui/react-slot';
 
 const queryClient = new QueryClient();
 
@@ -32,7 +35,7 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-          <Router>
+        <Router>
           <Routes>
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
@@ -100,9 +103,29 @@ const App = () => {
                 </PrivateRoute>
               }
             />
+            <Route
+              path="/billing/success"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
+                  <PaymentSuccess />
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/billing/failed"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
+                  <PaymentFailed />
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
             <Route path="/" element={<Navigate to="/login" />} />
           </Routes>
-          </Router>
+        </Router>
       </AuthProvider>
     </QueryClientProvider>
   );

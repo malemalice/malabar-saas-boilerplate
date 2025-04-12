@@ -48,6 +48,18 @@ export class BillingController {
         return this.billingService.createSubscription(data.teamId, data.planId, data.paymentMethod);
     }
 
+    @ApiOperation({ summary: 'Repay unpaid invoice' })
+    @ApiResponse({ status: 200, description: 'Invoice repaid successfully', type: SubscriptionResponseDto })
+    @ApiResponse({ status: 401, description: 'Unauthorized' })
+    @ApiResponse({ status: 403, description: 'Forbidden - Requires billing role' })
+    @ApiResponse({ status: 404, description: 'Invoice not found' })
+    @Post('invoices/:invoiceId/repay')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    // @Roles(RoleType.BILLING, RoleType.OWNER)
+    async repayInvoice(@Param('invoiceId') invoiceId: string): Promise<{ subscription: Subscription; checkoutUrl: string }> {
+        return this.billingService.repayInvoice(invoiceId);
+    }
+
     @ApiOperation({ summary: 'Get team subscription' })
     @ApiResponse({ status: 200, description: 'Returns the team subscription', type: SubscriptionResponseDto })
     @ApiResponse({ status: 401, description: 'Unauthorized' })

@@ -28,7 +28,7 @@ export class BillingService {
         private dataSource: DataSource,
         private configService: ConfigService,
         private stripeConfig: StripeConfig,
-    ) {}
+    ) { }
 
     async createPlan(planData: Partial<Plan>): Promise<Plan> {
         const plan = this.planRepository.create(planData);
@@ -50,7 +50,7 @@ export class BillingService {
         if (!team) throw new NotFoundException('Team not found');
 
         const plan = await this.getPlan(planId);
-        
+
         // Find existing subscription with latest end date for the same team and plan
         const existingSubscription = await this.subscriptionRepository.findOne({
             where: {
@@ -69,6 +69,10 @@ export class BillingService {
             endDate.setFullYear(endDate.getFullYear() + 1);
         }
 
+        if (paymentMethod !== 'stripe') {
+            throw new BadRequestException('Payment method not supported');
+        }
+
         const subscription = this.subscriptionRepository.create({
             teamId,
             planId,
@@ -80,6 +84,36 @@ export class BillingService {
         const savedSubscription = await this.subscriptionRepository.save(subscription);
         const invoice = await this.createInvoice(savedSubscription.id);
 
+        const stripePayment = await this.createStripePayment(invoice.id);
+
+        return {
+            subscription: savedSubscription,
+            checkoutUrl: stripePayment.url,
+        };
+    }
+
+    async repayInvoice(invoiceId: string): Promise<{ subscription: Subscription; checkoutUrl: string }> {
+        const invoice = await this.invoiceRepository.findOne({
+            where: { id: invoiceId },
+            relations: ['subscription'],
+        });
+        if (!invoice) throw new NotFoundException('Invoice not found');
+        if (invoice.status !== InvoiceStatus.UNPAID) {
+            throw new BadRequestException('Invoice is not unpaid');
+        }
+        const payment = await this.createStripePayment(invoice.id);
+        return {
+            subscription: invoice.subscription,
+            checkoutUrl: payment.url,
+        };
+    }
+
+    async createStripePayment(invoiceId: string): Promise<Stripe.Checkout.Session> {
+        const invoice = await this.invoiceRepository.findOne({
+            where: { id: invoiceId },
+            relations: ['subscription', 'subscription.plan'],
+        });
+        const teamId = invoice.teamId;
         // Create or get Stripe customer
         const stripe = this.stripeConfig.getStripe();
         let customer = await stripe.customers.search({
@@ -94,21 +128,18 @@ export class BillingService {
 
         // Create Stripe checkout session
         const session = await this.stripeConfig.createCheckoutSession({
-            priceId: plan.stripePriceId,
+            priceId: invoice.subscription.plan.stripePriceId,
             customerId: customer.id,
             successUrl: `${this.configService.get('FRONTEND_URL')}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
             cancelUrl: `${this.configService.get('FRONTEND_URL')}/billing/cancel`,
             metadata: {
-                subscriptionId: String(savedSubscription.id),
+                subscriptionId: String(invoice.subscription.id),
                 invoiceId: String(invoice.id),
                 teamId,
             },
         });
 
-        return {
-            subscription: savedSubscription,
-            checkoutUrl: session.url,
-        };
+        return session;
     }
 
     async createInvoice(subscriptionId: string): Promise<Invoice> {
@@ -207,7 +238,7 @@ export class BillingService {
             const freePlan = await this.planRepository.findOne({
                 where: { name: 'Free' }
             });
-            
+
             // Create a virtual subscription with the free plan
             const virtualSubscription = new Subscription();
             virtualSubscription.teamId = teamId;
@@ -215,7 +246,7 @@ export class BillingService {
             virtualSubscription.status = SubscriptionStatus.ACTIVE;
             virtualSubscription.startDate = new Date();
             virtualSubscription.endDate = new Date(8640000000000000); // Set to max date
-            
+
             return virtualSubscription;
         }
 
@@ -227,7 +258,7 @@ export class BillingService {
 
         const [items, total] = await this.invoiceRepository.findAndCount({
             where: { teamId },
-            relations: ['subscription', 'payments','subscription.plan'],
+            relations: ['subscription', 'payments', 'subscription.plan'],
             order: { createdAt: 'DESC' },
             skip,
             take: options.limit
@@ -252,7 +283,7 @@ export class BillingService {
 
         // Get the team's active subscription and plan
         const subscription = await this.getTeamSubscription(teamId);
-        
+
         const features = {};
         if (subscription.plan.features) {
             subscription.plan.features.forEach(feature => {
