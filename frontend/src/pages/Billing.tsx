@@ -8,6 +8,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTeam } from '@/contexts/TeamContext';
 import { TEAM_ROLES } from '@/constants/teamRoles';
+import { toast } from '@/components/ui/use-toast';
+import axios from '@/lib/axios';
 
 const Billing = () => {
   const navigate = useNavigate();
@@ -28,9 +30,22 @@ const Billing = () => {
     }
   }, [activeTeam, navigate]);
 
-  const handlePay = (invoiceId: string) => {
-    // Handle payment logic here
-    console.log('Pay invoice:', invoiceId);
+  const handlePay = async (invoiceId: string) => {
+    try {
+      const response = await axios.post(`/api/billing/invoices/${invoiceId}/repay`);
+      toast({
+        title: 'Success',
+        description: 'You will be redirected to the payment page, and will return here after payment is complete.',
+      });
+      window.location.href = response.data.checkoutUrl;
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to process payment. Please try again.',
+        variant: 'destructive'
+      });
+    }
   };
 
   const handleCancel = (invoiceId: string) => {

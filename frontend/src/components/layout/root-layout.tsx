@@ -98,7 +98,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <Link to="/team" className="w-full">
-                    Team {activeTeam?.role}
+                    Team
                   </Link>
                 </DropdownMenuItem>
                 {(activeTeam?.role === TEAM_ROLES.OWNER || activeTeam?.role === TEAM_ROLES.BILLING) && (
