@@ -12,15 +12,17 @@ export const authKeys = {
 
 // Get current user
 export const useCurrentUser = () => {
+  const queryClient = useQueryClient();
   const [hasToken, setHasToken] = useState(!!localStorage.getItem('accessToken'));
   
   useEffect(() => {
     // Update hasToken state when localStorage changes
     const checkToken = () => {
-      setHasToken(!!localStorage.getItem('accessToken'));
+      const tokenExists = !!localStorage.getItem('accessToken');
+      setHasToken(tokenExists);
     };
     
-    // Listen for storage events (from other tabs)
+    // Listen for storage events (from other tabs and manual dispatches)
     window.addEventListener('storage', checkToken);
     
     // Check token on mount
@@ -63,11 +65,22 @@ export const useLogin = () => {
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
       
-      // Update query cache
+      // Update query cache with user data
       queryClient.setQueryData(authKeys.me(), data.user);
       
+      // Trigger storage event to notify useCurrentUser hook
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'accessToken',
+        oldValue: null,
+        newValue: data.accessToken,
+        storageArea: localStorage
+      }));
+      
+      // Force invalidate the query to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: authKeys.me() });
+      
       // Navigate to dashboard
-      navigate('/dashboard');
+      navigate('/dashboard', { replace: true });
     },
     onError: (error) => {
       console.error('Login failed:', error);
@@ -87,14 +100,25 @@ export const useSignup = () => {
       localStorage.setItem('accessToken', data.accessToken);
       localStorage.setItem('refreshToken', data.refreshToken);
       
+      // Trigger storage event to notify useCurrentUser hook
+      window.dispatchEvent(new StorageEvent('storage', {
+        key: 'accessToken',
+        oldValue: null,
+        newValue: data.accessToken,
+        storageArea: localStorage
+      }));
+      
       // Update query cache
       queryClient.setQueryData(authKeys.me(), data.user);
       
+      // Force invalidate the query to ensure fresh data
+      queryClient.invalidateQueries({ queryKey: authKeys.me() });
+      
       // Navigate to verification pending if not verified
       if (!data.user.isVerified) {
-        navigate('/verify-pending');
+        navigate('/verify-pending', { replace: true });
       } else {
-        navigate('/dashboard');
+        navigate('/dashboard', { replace: true });
       }
     },
     onError: (error) => {
