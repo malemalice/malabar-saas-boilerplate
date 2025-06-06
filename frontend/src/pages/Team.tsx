@@ -1,5 +1,5 @@
 import { Pencil, Trash2 } from 'lucide-react';
-import { useTeam } from '@/contexts/TeamContext';
+import { useTeam, useMyTeam } from '@/features/team';
 import { InviteTeamModal } from '@/components/modals/InviteTeamModal';
 import { RoleChangeModal } from '@/components/modals/RoleChangeModal';
 import { DeleteMemberModal } from '@/components/modals/DeleteMemberModal';
@@ -9,7 +9,8 @@ import { FirstLetterUpper } from '@/lib/utils';
 import { TEAM_ROLES } from '@/constants/teamRoles';
 
 const Team = () => {
-  const { members, loading, error, activeTeam } = useTeam();
+  const { activeTeam } = useTeam();
+  const { data: teamData, isLoading, error } = useMyTeam();
   const [selectedMember, setSelectedMember] = useState<{
     userId: string;
     email: string;
@@ -22,7 +23,7 @@ const Team = () => {
   } | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="container mx-auto py-8 px-4 flex items-center justify-center">
         <div className="text-gray-500">Loading team members...</div>
@@ -33,10 +34,12 @@ const Team = () => {
   if (error) {
     return (
       <div className="container mx-auto py-8 px-4">
-        <div className="text-red-500">{error}</div>
+        <div className="text-red-500">Failed to load team data</div>
       </div>
     );
   }
+
+  const members = teamData?.members || [];
 
   return (
     <div className="container mx-auto py-8 px-4">

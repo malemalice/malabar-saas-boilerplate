@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '../contexts/AuthContext';
+import { useLogin } from '@/features/auth';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -24,8 +24,7 @@ const formSchema = z.object({
 type LoginForm = z.infer<typeof formSchema>;
 
 const Login = () => {
-  const { login } = useAuth();
-  const navigate = useNavigate();
+  const loginMutation = useLogin();
   const [error, setError] = useState('');
   const form = useForm<LoginForm>({
     resolver: zodResolver(formSchema),
@@ -35,14 +34,13 @@ const Login = () => {
     },
   });
 
-  const onSubmit = async (data: LoginForm) => {
-    try {
-      setError('');
-      await login(data.email, data.password);
-      navigate('/dashboard');
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to login');
-    }
+  const onSubmit = (data: LoginForm) => {
+    setError('');
+    loginMutation.mutate(data, {
+      onError: (err: any) => {
+        setError(err.response?.data?.message || 'Failed to login');
+      }
+    });
   };
 
   return (
@@ -100,9 +98,9 @@ const Login = () => {
             <Button
               type="submit"
               className="w-full"
-              disabled={form.formState.isSubmitting}
+              disabled={loginMutation.isLoading}
             >
-              {form.formState.isSubmitting ? 'Signing in...' : 'Sign In'}
+              {loginMutation.isLoading ? 'Signing in...' : 'Sign In'}
             </Button>
 
             <div className="text-center text-sm space-y-2">

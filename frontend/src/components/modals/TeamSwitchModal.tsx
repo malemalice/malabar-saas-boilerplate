@@ -7,7 +7,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { useTeam } from '@/contexts/TeamContext';
+import { useTeam, useJoinedTeams } from '@/features/team';
 import axios from '@/lib/axios';
 
 interface Team {

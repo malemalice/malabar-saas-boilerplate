@@ -5,12 +5,11 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useActivePlan } from '@/hooks/useActivePlan';
-import { Plan } from '@/hooks/usePlans';
-import { useAuth } from '@/contexts/AuthContext';
+import { useActivePlan, type Plan } from '@/features/billing';
+import { useAuth } from '@/features/auth';
 import axios from '@/lib/axios';
 import { toast, useToast } from '@/components/ui/use-toast';
-import { useTeam } from '@/contexts/TeamContext';
+import { useTeam } from '@/features/team';
 
 const PaymentSummary = () => {
   const navigate = useNavigate();

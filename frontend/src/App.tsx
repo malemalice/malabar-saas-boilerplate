@@ -1,133 +1,239 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import PaymentSuccess from './pages/billing/PaymentSuccess';
-import PaymentFailed from './pages/billing/PaymentFailed';
-import PublicRoute from './components/auth/PublicRoute';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Suspense, lazy } from 'react';
 
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-import { TeamProvider } from './contexts/TeamContext';
+import ErrorBoundary from './components/ErrorBoundary';
+import QueryErrorBoundary from './components/QueryErrorBoundary';
+import { AuthProvider, useAuth } from '@/features/auth';
+import { TeamProvider } from '@/features/team';
+import PublicRoute from './components/auth/PublicRoute';
 import RootLayout from './components/layout/root-layout';
-import Login from './pages/Login';
-import SignUp from './pages/SignUp';
-import Dashboard from './pages/Dashboard';
-import Profile from './pages/Profile';
-import Team from './pages/Team';
-import VerifyEmail from './pages/VerifyEmail';
-import VerifyPending from './pages/VerifyPending';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
-import Billing from './pages/Billing';
-import Plans from './pages/Plans';
-import PaymentSummary from './pages/PaymentSummary';
-import { Root } from '@radix-ui/react-slot';
 
-const queryClient = new QueryClient();
+// Lazy load pages for code splitting
+const Login = lazy(() => import('./pages/Login'));
+const SignUp = lazy(() => import('./pages/SignUp'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Profile = lazy(() => import('./pages/Profile'));
+const Team = lazy(() => import('./pages/Team'));
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
+const VerifyPending = lazy(() => import('./pages/VerifyPending'));
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/ResetPassword'));
+const Billing = lazy(() => import('./pages/Billing'));
+const Plans = lazy(() => import('./pages/Plans'));
+const PaymentSummary = lazy(() => import('./pages/PaymentSummary'));
+const PaymentSuccess = lazy(() => import('./pages/billing/PaymentSuccess'));
+const PaymentFailed = lazy(() => import('./pages/billing/PaymentFailed'));
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error: any) => {
+        // Don't retry on 401/403 errors
+        if (error?.statusCode === 401 || error?.statusCode === 403) {
+          return false;
+        }
+        return failureCount < 3;
+      },
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      cacheTime: 10 * 60 * 1000, // 10 minutes
+      refetchOnWindowFocus: false, // Disable refetch on window focus
+      refetchOnReconnect: true, // Refetch on network reconnect
+    },
+    mutations: {
+      retry: (failureCount, error: any) => {
+        // Don't retry on 4xx errors
+        if (error?.statusCode >= 400 && error?.statusCode < 500) {
+          return false;
+        }
+        return failureCount < 2;
+      },
+    },
+  },
+});
+
+const LoadingSpinner = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+  </div>
+);
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  
+  // Debug logging
+  console.log('PrivateRoute state:', { isAuthenticated, isLoading, user });
+  
   if (isLoading) {
-    return <div>Loading...</div>;
+    console.log('PrivateRoute: Showing loading spinner');
+    return <LoadingSpinner />;
   }
-  return isAuthenticated ? <TeamProvider>{children}</TeamProvider> : <Navigate to="/login" />;
+  
+  if (!isAuthenticated) {
+    console.log('PrivateRoute: Redirecting to login');
+    return <Navigate to="/login" replace />;
+  }
+  
+  console.log('PrivateRoute: Allowing access to protected content');
+  return (
+    <TeamProvider>
+      <QueryErrorBoundary>
+        <Suspense fallback={<LoadingSpinner />}>
+          {children}
+        </Suspense>
+      </QueryErrorBoundary>
+    </TeamProvider>
+  );
 };
 
 const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
         <Router>
-          <Routes>
-            <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
-            <Route path="/signup" element={<PublicRoute><SignUp /></PublicRoute>} />
-            <Route path="/verify-email" element={<VerifyEmail />} />
-            <Route path="/verify-pending" element={<VerifyPending />} />
-            <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
-            <Route path="/reset-password" element={<PublicRoute><ResetPassword /></PublicRoute>} />
-            <Route
-              path="/dashboard"
-              element={
-                <PrivateRoute>
-                  <RootLayout>
-                    <Dashboard />
-                  </RootLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/profile"
-              element={
-                <PrivateRoute>
-                  <RootLayout>
-                    <Profile />
-                  </RootLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/team"
-              element={
-                <PrivateRoute>
-                  <RootLayout>
-                    <Team />
-                  </RootLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/billing"
-              element={
-                <PrivateRoute>
-                  <RootLayout>
-                    <Billing />
-                  </RootLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/plans"
-              element={
-                <PrivateRoute>
-                  <RootLayout>
-                    <Plans />
-                  </RootLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/payment-summary"
-              element={
-                <PrivateRoute>
-                  <RootLayout>
-                    <PaymentSummary />
-                  </RootLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/billing/success"
-              element={
-                <PrivateRoute>
-                  <RootLayout>
-                  <PaymentSuccess />
-                  </RootLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route
-              path="/billing/failed"
-              element={
-                <PrivateRoute>
-                  <RootLayout>
-                  <PaymentFailed />
-                  </RootLayout>
-                </PrivateRoute>
-              }
-            />
-            <Route path="/" element={<Navigate to="/login" />} />
-          </Routes>
+          <AuthProvider>
+            <Routes>
+              {/* Public Routes */}
+              <Route 
+                path="/login" 
+                element={
+                  <PublicRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <Login />
+                    </Suspense>
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/signup" 
+                element={
+                  <PublicRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <SignUp />
+                    </Suspense>
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/forgot-password" 
+                element={
+                  <PublicRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <ForgotPassword />
+                    </Suspense>
+                  </PublicRoute>
+                } 
+              />
+              <Route 
+                path="/reset-password" 
+                element={
+                  <PublicRoute>
+                    <Suspense fallback={<LoadingSpinner />}>
+                      <ResetPassword />
+                    </Suspense>
+                  </PublicRoute>
+                } 
+              />
+              <Route path="/verify-email" element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <VerifyEmail />
+                </Suspense>
+              } />
+              <Route path="/verify-pending" element={
+                <Suspense fallback={<LoadingSpinner />}>
+                  <VerifyPending />
+                </Suspense>
+              } />
+
+              {/* Private Routes */}
+              <Route
+                path="/dashboard"
+                element={
+                  <PrivateRoute>
+                    <RootLayout>
+                      <Dashboard />
+                    </RootLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <PrivateRoute>
+                    <RootLayout>
+                      <Profile />
+                    </RootLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/team"
+                element={
+                  <PrivateRoute>
+                    <RootLayout>
+                      <Team />
+                    </RootLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/billing"
+                element={
+                  <PrivateRoute>
+                    <RootLayout>
+                      <Billing />
+                    </RootLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/plans"
+                element={
+                  <PrivateRoute>
+                    <RootLayout>
+                      <Plans />
+                    </RootLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/payment-summary"
+                element={
+                  <PrivateRoute>
+                    <RootLayout>
+                      <PaymentSummary />
+                    </RootLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/billing/success"
+                element={
+                  <PrivateRoute>
+                    <RootLayout>
+                      <PaymentSuccess />
+                    </RootLayout>
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/billing/failed"
+                element={
+                  <PrivateRoute>
+                    <RootLayout>
+                      <PaymentFailed />
+                    </RootLayout>
+                  </PrivateRoute>
+                }
+              />
+              
+              {/* Redirect root to login */}
+              <Route path="/" element={<Navigate to="/login" />} />
+            </Routes>
+          </AuthProvider>
         </Router>
-      </AuthProvider>
-    </QueryClientProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 

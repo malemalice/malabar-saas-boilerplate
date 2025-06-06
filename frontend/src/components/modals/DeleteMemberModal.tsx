@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { useTeam } from '@/contexts/TeamContext';
+import { useRemoveMember } from '@/features/team';
 
 interface DeleteMemberModalProps {
   open: boolean;
@@ -20,32 +20,36 @@ interface DeleteMemberModalProps {
 }
 
 export function DeleteMemberModal({ open, onOpenChange, teamId, userId, email }: DeleteMemberModalProps) {
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  const { removeMember } = useTeam();
+  const removeMemberMutation = useRemoveMember();
 
-  const handleDelete = async () => {
-    try {
-      setIsLoading(true);
-      if (!userId) {
-        throw new Error('User ID is required');
-      }
-      await removeMember(userId);
-      toast({
-        title: 'Success',
-        description: 'Team member removed successfully',
-      });
-      onOpenChange(false);
-    } catch (error) {
-      console.error('Error removing member:', error);
+  const handleDelete = () => {
+    if (!userId) {
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to remove team member',
+        description: 'User ID is required',
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
+      return;
     }
+
+    removeMemberMutation.mutate({ teamId, userId }, {
+      onSuccess: () => {
+        toast({
+          title: 'Success',
+          description: 'Team member removed successfully',
+        });
+        onOpenChange(false);
+      },
+      onError: (error: any) => {
+        console.error('Error removing member:', error);
+        toast({
+          title: 'Error',
+          description: error.response?.data?.message || 'Failed to remove team member',
+          variant: 'destructive',
+        });
+      }
+    });
   };
 
   return (
@@ -64,16 +68,16 @@ export function DeleteMemberModal({ open, onOpenChange, teamId, userId, email }:
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isLoading}
+            disabled={removeMemberMutation.isLoading}
           >
             Cancel
           </Button>
           <Button
             variant="destructive"
             onClick={handleDelete}
-            disabled={isLoading}
+            disabled={removeMemberMutation.isLoading}
           >
-            Remove
+            {removeMemberMutation.isLoading ? 'Removing...' : 'Remove'}
           </Button>
         </DialogFooter>
       </DialogContent>

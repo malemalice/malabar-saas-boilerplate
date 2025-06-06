@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../../contexts/AuthContext';
+import { useAuth } from '@/features/auth';
 import { useState } from 'react';
 import {
   NavigationMenu,
@@ -17,7 +17,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { TeamSwitchModal } from '../modals/TeamSwitchModal';
 import { Toaster } from "@/components/ui/toaster";
-import { useTeam } from '@/contexts/TeamContext';
+import { useTeam } from '@/features/team';
 import { TEAM_ROLES } from '@/constants/teamRoles';
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => {

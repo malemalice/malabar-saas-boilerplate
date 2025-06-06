@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, useUpdateProfile, useChangePassword } from '@/features/auth';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -39,7 +39,9 @@ const formSchema = z.object({
 type ProfileForm = z.infer<typeof formSchema>;
 
 const Profile = () => {
-  const { user, updateProfile } = useAuth();
+  const { user } = useAuth();
+  const updateProfileMutation = useUpdateProfile();
+  const changePasswordMutation = useChangePassword();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const form = useForm<ProfileForm>({
@@ -50,28 +52,36 @@ const Profile = () => {
     },
   });
 
-  const onSubmit = async (data: ProfileForm) => {
-    try {
-      setError('');
-      setSuccess('');
-      
-      if (data.currentPassword && data.newPassword) {
-        await axios.post('/api/auth/change-password', {
-          currentPassword: data.currentPassword,
-          newPassword: data.newPassword
-        });
-        form.setValue('currentPassword', '');
-        form.setValue('newPassword', '');
-        form.setValue('confirmPassword', '');
-        setSuccess('Password changed successfully');
-      }
+  const onSubmit = (data: ProfileForm) => {
+    setError('');
+    setSuccess('');
+    
+    if (data.currentPassword && data.newPassword) {
+      changePasswordMutation.mutate({
+        currentPassword: data.currentPassword,
+        newPassword: data.newPassword
+      }, {
+        onSuccess: () => {
+          form.setValue('currentPassword', '');
+          form.setValue('newPassword', '');
+          form.setValue('confirmPassword', '');
+          setSuccess('Password changed successfully');
+        },
+        onError: (err: any) => {
+          setError(err.response?.data?.message || 'Failed to change password');
+        }
+      });
+    }
 
-      if (data.name !== user?.name) {
-        await updateProfile({ name: data.name, email: data.email });
-        setSuccess((prev) => prev ? `${prev} and profile updated` : 'Profile updated successfully');
-      }
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to update profile');
+    if (data.name !== user?.name) {
+      updateProfileMutation.mutate({ name: data.name }, {
+        onSuccess: () => {
+          setSuccess((prev) => prev ? `${prev} and profile updated` : 'Profile updated successfully');
+        },
+        onError: (err: any) => {
+          setError(err.response?.data?.message || 'Failed to update profile');
+        }
+      });
     }
   };
 
@@ -198,9 +208,9 @@ const Profile = () => {
               <Button
                 type="submit"
                 className="w-full"
-                disabled={form.formState.isSubmitting}
+                disabled={updateProfileMutation.isLoading || changePasswordMutation.isLoading}
               >
-                {form.formState.isSubmitting ? 'Saving...' : 'Save Changes'}
+                {(updateProfileMutation.isLoading || changePasswordMutation.isLoading) ? 'Saving...' : 'Save Changes'}
               </Button>
             </div>
           </form>

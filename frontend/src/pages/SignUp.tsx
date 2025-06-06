@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link as RouterLink, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
 import { useForm } from 'react-hook-form';
-import { useAuth } from '../contexts/AuthContext';
+import { useSignup } from '@/features/auth';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -30,8 +30,7 @@ const formSchema = z.object({
 type SignUpForm = z.infer<typeof formSchema>;
 
 const SignUp = () => {
-  const { signup } = useAuth();
-  const navigate = useNavigate();
+  const signupMutation = useSignup();
   const [error, setError] = useState('');
   const [searchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
@@ -64,14 +63,17 @@ const SignUp = () => {
     },
   });
 
-  const onSubmit = async (data: SignUpForm) => {
-    try {
-      setError('');
-      await signup(data.email, data.password, data.name);
-      navigate('/verify-pending', { state: { email: data.email } });
-    } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to create account');
-    }
+  const onSubmit = (data: SignUpForm) => {
+    setError('');
+    signupMutation.mutate({
+      email: data.email,
+      password: data.password,
+      name: data.name
+    }, {
+      onError: (err: any) => {
+        setError(err.response?.data?.message || 'Failed to create account');
+      }
+    });
   };
 
   return (
@@ -167,9 +169,9 @@ const SignUp = () => {
             <Button
               type="submit"
               className="w-full"
-              disabled={form.formState.isSubmitting}
+              disabled={signupMutation.isLoading}
             >
-              {form.formState.isSubmitting ? 'Creating Account...' : 'Sign Up'}
+              {signupMutation.isLoading ? 'Creating Account...' : 'Sign Up'}
             </Button>
 
             <div className="text-center text-sm">

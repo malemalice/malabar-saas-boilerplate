@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useInvoices } from '@/hooks/useInvoices';
-import { useActivePlan } from '@/hooks/useActivePlan';
+import { useTeamInvoices, useActivePlan } from '@/features/billing';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useTeam } from '@/contexts/TeamContext';
+import { useTeam } from '@/features/team';
 import { TEAM_ROLES } from '@/constants/teamRoles';
 import { toast } from '@/components/ui/use-toast';
 import axios from '@/lib/axios';
@@ -15,13 +14,21 @@ const Billing = () => {
   const navigate = useNavigate();
   const [rowsPerPage, setRowsPerPage] = useState('10');
   const [currentPage, setCurrentPage] = useState(1);
-  const { invoices, loading: invoicesLoading, error: invoicesError, meta, fetchInvoices } = useInvoices();
-  const { plan, loading: planLoading, error: planError } = useActivePlan();
-  const {activeTeam} = useTeam();
+  const { activeTeam } = useTeam();
+  const { data: invoicesData, isLoading: invoicesLoading, error: invoicesError } = useTeamInvoices(
+    activeTeam?.id || '', 
+    currentPage, 
+    parseInt(rowsPerPage)
+  );
+  const { data: plan, isLoading: planLoading, error: planError } = useActivePlan(activeTeam?.id || '');
 
-  useEffect(() => {
-    fetchInvoices(currentPage, parseInt(rowsPerPage));
-  }, [currentPage, rowsPerPage]);
+  const invoices = invoicesData?.invoices || [];
+  const meta = {
+    total: invoicesData?.total || 0,
+    page: invoicesData?.page || 1,
+    limit: invoicesData?.limit || 10,
+    totalPages: invoicesData?.totalPages || 1
+  };
 
   useEffect(() => {
     const hasAccess = activeTeam?.role === TEAM_ROLES.OWNER || activeTeam?.role === TEAM_ROLES.BILLING;
@@ -75,7 +82,7 @@ const Billing = () => {
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-2xl font-bold mb-1 text-red-600">Error</h3>
-                  <p className="text-sm text-muted-foreground">{planError}</p>
+                  <p className="text-sm text-muted-foreground">Failed to load plan</p>
                 </div>
               </div>
             ) : plan ? (
@@ -120,7 +127,7 @@ const Billing = () => {
               </div>
             ) : planError ? (
               <div className="flex justify-center py-4">
-                <p className="text-red-600">{planError}</p>
+                <p className="text-red-600">Failed to load plan details</p>
               </div>
             ) : plan ? (
               <div className="flex justify-between items-center">
@@ -165,7 +172,7 @@ const Billing = () => {
                 </TableRow>
               ) : invoicesError ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-red-600">{invoicesError}</TableCell>
+                  <TableCell colSpan={6} className="text-center text-red-600">Failed to load invoices</TableCell>
                 </TableRow>
               ) : invoices.length === 0 ? (
                 <TableRow>
@@ -174,7 +181,7 @@ const Billing = () => {
               ) : (
                 invoices.map((invoice) => (
                   <TableRow key={invoice.id}>
-                    <TableCell>{new Date(invoice.issuedDate).toLocaleDateString()}</TableCell>
+                    <TableCell>{new Date(invoice.invoiceDate).toLocaleDateString()}</TableCell>
                     <TableCell>{invoice.subscriptionId}</TableCell>
                     <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
                     <TableCell>${invoice.amount}</TableCell>
@@ -214,13 +221,13 @@ const Billing = () => {
             </div>
 
             <div className="flex items-center gap-2">
-              <span className="text-sm">Page {meta?.currentPage || 1} of {meta?.totalPages || 1}</span>
+              <span className="text-sm">Page {meta.page} of {meta.totalPages}</span>
               <div className="flex gap-1">
                 <Button
                   variant="outline"
                   size="icon"
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={!meta?.hasPreviousPage}
+                  disabled={currentPage <= 1}
                 >
                   &lt;
                 </Button>
@@ -228,7 +235,7 @@ const Billing = () => {
                   variant="outline"
                   size="icon"
                   onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={!meta?.hasNextPage}
+                  disabled={currentPage >= meta.totalPages}
                 >
                   &gt;
                 </Button>
