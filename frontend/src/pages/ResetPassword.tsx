@@ -43,7 +43,7 @@ const ResetPassword = () => {
   const onSubmit = async (data: ResetPasswordForm) => {
     try {
       setError('');
-      await axios.post('/api/auth/reset-password', {
+      await axios.post('/auth/reset-password', {
         token,
         newPassword: data.newPassword
       });

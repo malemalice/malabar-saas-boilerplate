@@ -45,7 +45,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const fetchUser = async () => {
     try {
-      const { data } = await axios.get('/api/auth/me');
+      const { data } = await axios.get('/auth/me');
       setUser(data);
     } catch (error) {
       localStorage.removeItem('token');
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const login = async (email: string, password: string) => {
-    const { data } = await axios.post('/api/auth/login', { email, password });
+    const { data } = await axios.post('/auth/login', { email, password });
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
     axios.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
@@ -64,7 +64,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     
     // Fetch and store first team ID
     try {
-      const { data: teams } = await axios.get('/api/teams/joined');
+      const { data: teams } = await axios.get('/teams/joined');
       if (teams.length > 0) {
         localStorage.setItem('activeTeamId', teams[0].id);
         localStorage.setItem('activeTeamName', teams[0].name);
@@ -75,7 +75,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signup = async (email: string, password: string, name: string) => {
-    const { data } = await axios.post('/api/auth/signup', { email, password, name });
+    const { data } = await axios.post('/auth/signup', { email, password, name });
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
     axios.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
@@ -92,7 +92,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateProfile = async (data: Partial<User>) => {
-    const { data: updatedUser } = await axios.patch('/api/auth/profile', data);
+    const { data: updatedUser } = await axios.patch('/auth/profile', data);
     setUser(updatedUser);
   };
 
@@ -117,7 +117,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     }
 
-    const { data } = await axios.post('/api/auth/resend-verification', {
+    const { data } = await axios.post('/auth/resend-verification', {
       email: user?.email
     });
     setLastVerificationTime(now);

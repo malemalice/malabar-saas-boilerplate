@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TEAM_ROLES } from '@/constants/teamRoles';
-import { useTeam, useInviteMember } from '@/features/team';
+import { useInviteMember } from '@/features/team';
+import { useTeam } from '@/contexts/team/TeamContext';
 import {
   Dialog,
   DialogContent,

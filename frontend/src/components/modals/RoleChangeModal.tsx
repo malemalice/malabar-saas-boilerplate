@@ -11,7 +11,8 @@ import { TEAM_ROLES } from '@/constants/teamRoles';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useTeam, useUpdateMemberRole } from '@/features/team';
+import { useUpdateMemberRole } from '@/features/team';
+import { useTeam } from '@/contexts/team/TeamContext';
 
 interface RoleChangeModalProps {
   open: boolean;

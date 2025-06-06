@@ -52,48 +52,48 @@ export interface ResendVerificationRequest {
 }
 
 // Auth Service
-class AuthService {
-  private readonly baseUrl = '/api/auth';
+const BASE_URL = '/auth';
 
+const authService = {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    return apiClient.post<AuthResponse>(`${this.baseUrl}/login`, credentials);
-  }
+    return apiClient.post<AuthResponse>(`${BASE_URL}/login`, credentials);
+  },
 
   async signup(userData: SignupRequest): Promise<AuthResponse> {
-    return apiClient.post<AuthResponse>(`${this.baseUrl}/signup`, userData);
-  }
+    return apiClient.post<AuthResponse>(`${BASE_URL}/signup`, userData);
+  },
 
   async getCurrentUser(): Promise<User> {
-    return apiClient.get<User>(`${this.baseUrl}/me`);
-  }
+    return apiClient.get<User>(`${BASE_URL}/me`);
+  },
 
   async updateProfile(data: Partial<User>): Promise<User> {
-    return apiClient.patch<User>(`${this.baseUrl}/profile`, data);
-  }
+    return apiClient.patch<User>(`${BASE_URL}/profile`, data);
+  },
 
   async refreshToken(request: RefreshTokenRequest): Promise<AuthResponse> {
-    return apiClient.post<AuthResponse>(`${this.baseUrl}/refresh`, request);
-  }
+    return apiClient.post<AuthResponse>(`${BASE_URL}/refresh`, request);
+  },
 
   async forgotPassword(request: ForgotPasswordRequest): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`${this.baseUrl}/forgot-password`, request);
-  }
+    return apiClient.post<{ message: string }>(`${BASE_URL}/forgot-password`, request);
+  },
 
   async resetPassword(request: ResetPasswordRequest): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`${this.baseUrl}/reset-password`, request);
-  }
+    return apiClient.post<{ message: string }>(`${BASE_URL}/reset-password`, request);
+  },
 
   async changePassword(request: ChangePasswordRequest): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`${this.baseUrl}/change-password`, request);
-  }
+    return apiClient.post<{ message: string }>(`${BASE_URL}/change-password`, request);
+  },
 
   async verifyEmail(request: VerifyEmailRequest): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`${this.baseUrl}/verify-email`, request);
-  }
+    return apiClient.post<{ message: string }>(`${BASE_URL}/verify-email`, request);
+  },
 
   async resendVerification(request: ResendVerificationRequest): Promise<{ message: string; nextResendTime: Date }> {
-    return apiClient.post<{ message: string; nextResendTime: Date }>(`${this.baseUrl}/resend-verification`, request);
-  }
-}
+    return apiClient.post<{ message: string; nextResendTime: Date }>(`${BASE_URL}/resend-verification`, request);
+  },
+};
 
-export default new AuthService(); 
+export default authService; 

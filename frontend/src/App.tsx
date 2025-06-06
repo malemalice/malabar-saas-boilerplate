@@ -59,22 +59,16 @@ const LoadingSpinner = () => (
 );
 
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
-  
-  // Debug logging
-  console.log('PrivateRoute state:', { isAuthenticated, isLoading, user });
+  const { isAuthenticated, isLoading } = useAuth();
   
   if (isLoading) {
-    console.log('PrivateRoute: Showing loading spinner');
     return <LoadingSpinner />;
   }
   
   if (!isAuthenticated) {
-    console.log('PrivateRoute: Redirecting to login');
     return <Navigate to="/login" replace />;
   }
   
-  console.log('PrivateRoute: Allowing access to protected content');
   return (
     <TeamProvider>
       <QueryErrorBoundary>

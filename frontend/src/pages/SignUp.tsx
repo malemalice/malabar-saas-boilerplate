@@ -41,7 +41,7 @@ const SignUp = () => {
       
       try {
         setIsLoading(true);
-        const { data } = await axios.get(`/api/teams/invitations/${token}`);
+        const { data } = await axios.get(`/teams/invitations/${token}`);
         form.setValue('email', data.email);
       } catch (err: any) {
         setError(err.response?.data?.message || 'Invalid or expired invitation');

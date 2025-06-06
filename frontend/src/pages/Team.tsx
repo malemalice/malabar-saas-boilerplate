@@ -1,5 +1,7 @@
 import { Pencil, Trash2 } from 'lucide-react';
-import { useTeam, useMyTeam } from '@/features/team';
+import { useJoinedTeams } from '@/features/team';
+import { useTeam } from '@/contexts/team/TeamContext';
+import { useAuth } from '@/features/auth';
 import { InviteTeamModal } from '@/components/modals/InviteTeamModal';
 import { RoleChangeModal } from '@/components/modals/RoleChangeModal';
 import { DeleteMemberModal } from '@/components/modals/DeleteMemberModal';
@@ -10,7 +12,8 @@ import { TEAM_ROLES } from '@/constants/teamRoles';
 
 const Team = () => {
   const { activeTeam } = useTeam();
-  const { data: teamData, isLoading, error } = useMyTeam();
+  const { user } = useAuth();
+  const { data: joinedTeams, isLoading: joinedLoading, error: joinedError } = useJoinedTeams();
   const [selectedMember, setSelectedMember] = useState<{
     userId: string;
     email: string;
@@ -23,7 +26,7 @@ const Team = () => {
   } | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
-  if (isLoading) {
+  if (joinedLoading) {
     return (
       <div className="container mx-auto py-8 px-4 flex items-center justify-center">
         <div className="text-gray-500">Loading team members...</div>
@@ -31,7 +34,7 @@ const Team = () => {
     );
   }
 
-  if (error) {
+  if (joinedError) {
     return (
       <div className="container mx-auto py-8 px-4">
         <div className="text-red-500">Failed to load team data</div>
@@ -39,7 +42,11 @@ const Team = () => {
     );
   }
 
-  const members = teamData?.members || [];
+  // Find the current team data from joined teams (it has complete member info with roles)
+  const currentTeamData = joinedTeams?.find(team => team.id === activeTeam?.id);
+  
+  // Get members with complete role information
+  const members = currentTeamData?.members || [];
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -79,7 +86,7 @@ const Team = () => {
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {FirstLetterUpper(member.role)}
+                  {member.role ? FirstLetterUpper(member.role) : 'Unknown'}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <Badge status={member.status.toLowerCase() as "active" | "inviting" | "reject"}>
@@ -93,7 +100,7 @@ const Team = () => {
                       setSelectedMember({
                         userId: member.userId,
                         email: member.email,
-                        role: member.role
+                        role: member.role || 'unknown'
                       });
                       setIsRoleModalOpen(true);
                     }}

@@ -40,7 +40,7 @@ export const TeamProvider: React.FC<TeamProviderProps> = ({ children }) => {
       : null;
   });
 
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const { data: joinedTeams, isLoading } = useJoinedTeams();
   
   // Ensure joinedTeams is always an array
@@ -65,9 +65,10 @@ export const TeamProvider: React.FC<TeamProviderProps> = ({ children }) => {
     localStorage.setItem('activeTeamId', teamId);
     localStorage.setItem('activeTeamName', teamName);
     
-    // Find the role from joined teams - with safe array check
+    // Find the current user's role in the team
     const team = safeJoinedTeams.find(t => t.id === teamId);
-    const role = team?.role || TEAM_ROLES.ADMIN;
+    const currentUserMember = team?.members?.find(member => member.email === user?.email);
+    const role = currentUserMember?.role || TEAM_ROLES.ADMIN;
     
     localStorage.setItem('activeTeamRole', FirstLetterUpper(role));
     setActiveTeam({ id: teamId, name: teamName, role: role as TeamRole });

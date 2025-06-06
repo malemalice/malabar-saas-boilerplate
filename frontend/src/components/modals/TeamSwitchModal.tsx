@@ -7,7 +7,8 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { useTeam, useJoinedTeams } from '@/features/team';
+import { useJoinedTeams } from '@/features/team';
+import { useTeam } from '@/contexts/team/TeamContext';
 import axios from '@/lib/axios';
 
 interface Team {
@@ -42,7 +43,7 @@ export function TeamSwitchModal({ open, onOpenChange }: TeamSwitchModalProps) {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get('/api/teams/joined');
+              const response = await axios.get('/teams/joined');
       setTeams(response.data);
     } catch (err) {
       setError('Failed to fetch teams');

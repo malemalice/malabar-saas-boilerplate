@@ -48,28 +48,28 @@ export interface RepayInvoiceRequest {
 }
 
 // Billing Service
-class BillingService {
-  private readonly baseUrl = '/api/billing';
+const BASE_URL = '/billing';
 
+const billingService = {
   async getPlans(): Promise<Plan[]> {
-    return apiClient.get<Plan[]>(`${this.baseUrl}/plans`);
-  }
+    return apiClient.get<Plan[]>(`${BASE_URL}/plans`);
+  },
 
   async getPlanById(planId: number): Promise<Plan> {
-    return apiClient.get<Plan>(`${this.baseUrl}/plans/${planId}`);
-  }
+    return apiClient.get<Plan>(`${BASE_URL}/plans/${planId}`);
+  },
 
   async createSubscription(data: CreateSubscriptionRequest): Promise<{ clientSecret: string; subscriptionId: string }> {
-    return apiClient.post<{ clientSecret: string; subscriptionId: string }>(`${this.baseUrl}/subscriptions`, data);
-  }
+    return apiClient.post<{ clientSecret: string; subscriptionId: string }>(`${BASE_URL}/subscriptions`, data);
+  },
 
   async getTeamSubscription(teamId: string): Promise<Subscription | null> {
-    return apiClient.get<Subscription | null>(`${this.baseUrl}/teams/${teamId}/subscription`);
-  }
+    return apiClient.get<Subscription | null>(`${BASE_URL}/teams/${teamId}/subscription`);
+  },
 
   async getActivePlan(teamId: string): Promise<Plan | null> {
-    return apiClient.get<Plan | null>(`${this.baseUrl}/teams/${teamId}/active-plan`);
-  }
+    return apiClient.get<Plan | null>(`${BASE_URL}/teams/${teamId}/active-plan`);
+  },
 
   async getTeamInvoices(teamId: string, page: number = 1, limit: number = 10): Promise<{
     invoices: Invoice[];
@@ -84,20 +84,20 @@ class BillingService {
       page: number;
       limit: number;
       totalPages: number;
-    }>(`${this.baseUrl}/teams/${teamId}/invoices?page=${page}&limit=${limit}`);
-  }
+    }>(`${BASE_URL}/teams/${teamId}/invoices?page=${page}&limit=${limit}`);
+  },
 
   async repayInvoice(invoiceId: string, data: RepayInvoiceRequest = {}): Promise<{ clientSecret: string }> {
-    return apiClient.post<{ clientSecret: string }>(`${this.baseUrl}/invoices/${invoiceId}/repay`, data);
-  }
+    return apiClient.post<{ clientSecret: string }>(`${BASE_URL}/invoices/${invoiceId}/repay`, data);
+  },
 
   async cancelSubscription(subscriptionId: string): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`${this.baseUrl}/subscriptions/${subscriptionId}/cancel`);
-  }
+    return apiClient.post<{ message: string }>(`${BASE_URL}/subscriptions/${subscriptionId}/cancel`);
+  },
 
   async updateSubscription(subscriptionId: string, planId: number): Promise<{ message: string }> {
-    return apiClient.patch<{ message: string }>(`${this.baseUrl}/subscriptions/${subscriptionId}`, { planId });
-  }
-}
+    return apiClient.patch<{ message: string }>(`${BASE_URL}/subscriptions/${subscriptionId}`, { planId });
+  },
+};
 
-export default new BillingService(); 
+export default billingService; 

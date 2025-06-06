@@ -23,11 +23,8 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const { data: user, isLoading, error } = useCurrentUser();
+  const { data: user, isLoading } = useCurrentUser();
   const logout = useLogout();
-
-  // Debug logging
-  console.log('AuthProvider state:', { user, isLoading, error, hasToken: !!localStorage.getItem('accessToken') });
 
   const value: AuthContextType = {
     user: user || null,

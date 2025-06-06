@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useTeam } from '@/features/team';
+import { useTeam } from '@/contexts/team/TeamContext';
 import { TEAM_ROLES } from '@/constants/teamRoles';
 import { toast } from '@/components/ui/use-toast';
 import axios from '@/lib/axios';
@@ -39,7 +39,7 @@ const Billing = () => {
 
   const handlePay = async (invoiceId: string) => {
     try {
-      const response = await axios.post(`/api/billing/invoices/${invoiceId}/repay`);
+      const response = await axios.post(`/billing/invoices/${invoiceId}/repay`);
       toast({
         title: 'Success',
         description: 'You will be redirected to the payment page, and will return here after payment is complete.',

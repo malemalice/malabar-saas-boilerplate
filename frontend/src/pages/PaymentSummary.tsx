@@ -9,7 +9,7 @@ import { useActivePlan, type Plan } from '@/features/billing';
 import { useAuth } from '@/features/auth';
 import axios from '@/lib/axios';
 import { toast, useToast } from '@/components/ui/use-toast';
-import { useTeam } from '@/features/team';
+import { useTeam } from '@/contexts/team/TeamContext';
 
 const PaymentSummary = () => {
   const navigate = useNavigate();
@@ -54,7 +54,7 @@ const PaymentSummary = () => {
     
     try {
       setIsLoading(true);
-      const response = await axios.post('/api/billing/subscriptions', {
+      const response = await axios.post('/billing/subscriptions', {
         teamId: activeTeam?.id,
         planId: selectedPlan.id,
         paymentMethod

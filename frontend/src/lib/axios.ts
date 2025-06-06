@@ -1,6 +1,8 @@
 import axios from 'axios';
 
-const axiosInstance = axios.create();
+const axiosInstance = axios.create({
+  baseURL: '/api',
+});
 
 // Queue to store pending requests during token refresh
 let isRefreshing = false;
@@ -74,7 +76,7 @@ axiosInstance.interceptors.response.use(
           throw new Error('No refresh token available');
         }
 
-        const { data } = await axiosInstance.post('/api/auth/refresh', {
+        const { data } = await axiosInstance.post('/auth/refresh', {
           refreshToken,
         });
 

@@ -6,22 +6,16 @@ interface PublicRouteProps {
 }
 
 const PublicRoute = ({ children }: PublicRouteProps) => {
-  const { isAuthenticated, isLoading, user } = useAuth();
-
-  // Debug logging
-  console.log('PublicRoute state:', { isAuthenticated, isLoading, user });
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    console.log('PublicRoute: Showing loading spinner');
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
   }
 
   if (isAuthenticated) {
-    console.log('PublicRoute: Redirecting to dashboard');
     return <Navigate to="/dashboard" replace />;
   }
 
-  console.log('PublicRoute: Showing public content');
   return <>{children}</>;
 };
 

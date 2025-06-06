@@ -40,8 +40,8 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       setError(null);
-      const { data: userData } = await axios.get('/api/auth/me');
-      const response = await axios.get('/api/teams/'+activeTeam?.id);
+      const { data: userData } = await axios.get('/auth/me');
+      const response = await axios.get('/teams/'+activeTeam?.id);
       const teamData = response.data;
       
       // Transform the API response to match our TeamMember interface
@@ -81,7 +81,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     const initializeTeam = async () => {
       if (!activeTeam) {
         try {
-          const { data: teams } = await axios.get('/api/teams/joined');
+          const { data: teams } = await axios.get('/teams/joined');
           if (teams.length > 0) {
             localStorage.setItem('activeTeamId', teams[0].id);
             localStorage.setItem('activeTeamName', teams[0].name);
@@ -104,9 +104,9 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       setError(null);
-      const response = await axios.get('/api/teams/my-team');
+      const response = await axios.get('/teams/my-team');
       const teamId = response.data.id;
-      await axios.post(`/api/teams/${teamId}/invite`, { email });
+      await axios.post(`/teams/${teamId}/invite`, { email });
       await fetchMembers();
     } catch (err) {
       setError('Failed to invite team member');
@@ -130,7 +130,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       setError(null);
-      await axios.patch(`/api/teams/${activeTeam.id}/members/${userId}/role`, { role });
+      await axios.patch(`/teams/${activeTeam.id}/members/${userId}/role`, { role });
       await fetchMembers();
     } catch (err) {
       setError('Failed to update member role');
@@ -146,7 +146,7 @@ export function TeamProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       setError(null);
-      await axios.delete(`/api/teams/${activeTeam.id}/members/${userId}`);
+      await axios.delete(`/teams/${activeTeam.id}/members/${userId}`);
       await fetchMembers();
     } catch (err) {
       setError('Failed to remove team member');
