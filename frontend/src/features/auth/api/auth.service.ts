@@ -1,4 +1,4 @@
-import apiClient from '@/lib/api-client';
+import axios from '@/lib/axios';
 
 // Types
 export interface User {
@@ -56,43 +56,53 @@ const BASE_URL = '/auth';
 
 const authService = {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
-    return apiClient.post<AuthResponse>(`${BASE_URL}/login`, credentials);
+    const response = await axios.post(`${BASE_URL}/login`, credentials);
+    return response.data;
   },
 
   async signup(userData: SignupRequest): Promise<AuthResponse> {
-    return apiClient.post<AuthResponse>(`${BASE_URL}/signup`, userData);
+    const response = await axios.post(`${BASE_URL}/signup`, userData);
+    return response.data;
   },
 
   async getCurrentUser(): Promise<User> {
-    return apiClient.get<User>(`${BASE_URL}/me`);
+    const response = await axios.get(`${BASE_URL}/me`);
+    return response.data;
   },
 
   async updateProfile(data: Partial<User>): Promise<User> {
-    return apiClient.patch<User>(`${BASE_URL}/profile`, data);
+    const response = await axios.patch(`${BASE_URL}/profile`, data);
+    return response.data;
   },
 
   async refreshToken(request: RefreshTokenRequest): Promise<AuthResponse> {
-    return apiClient.post<AuthResponse>(`${BASE_URL}/refresh`, request);
+    const response = await axios.post(`${BASE_URL}/refresh`, request);
+    return response.data;
   },
 
   async forgotPassword(request: ForgotPasswordRequest): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`${BASE_URL}/forgot-password`, request);
+    const response = await axios.post(`${BASE_URL}/forgot-password`, request);
+    return response.data;
   },
 
   async resetPassword(request: ResetPasswordRequest): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`${BASE_URL}/reset-password`, request);
+    const response = await axios.post(`${BASE_URL}/reset-password`, request);
+    return response.data;
   },
 
   async changePassword(request: ChangePasswordRequest): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`${BASE_URL}/change-password`, request);
+    const response = await axios.post(`${BASE_URL}/change-password`, request);
+    return response.data;
   },
 
   async verifyEmail(request: VerifyEmailRequest): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`${BASE_URL}/verify-email`, request);
+    const response = await axios.post(`${BASE_URL}/verify-email`, request);
+    return response.data;
   },
 
   async resendVerification(request: ResendVerificationRequest): Promise<{ message: string; nextResendTime: Date }> {
-    return apiClient.post<{ message: string; nextResendTime: Date }>(`${BASE_URL}/resend-verification`, request);
+    const response = await axios.post(`${BASE_URL}/resend-verification`, request);
+    return response.data;
   },
 };
 

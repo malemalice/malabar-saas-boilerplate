@@ -1,4 +1,4 @@
-import apiClient from '@/lib/api-client';
+import axios from '@/lib/axios';
 
 // Types
 export interface Plan {
@@ -52,23 +52,28 @@ const BASE_URL = '/billing';
 
 const billingService = {
   async getPlans(): Promise<Plan[]> {
-    return apiClient.get<Plan[]>(`${BASE_URL}/plans`);
+    const response = await axios.get(`${BASE_URL}/plans`);
+    return response.data;
   },
 
   async getPlanById(planId: number): Promise<Plan> {
-    return apiClient.get<Plan>(`${BASE_URL}/plans/${planId}`);
+    const response = await axios.get(`${BASE_URL}/plans/${planId}`);
+    return response.data;
   },
 
   async createSubscription(data: CreateSubscriptionRequest): Promise<{ clientSecret: string; subscriptionId: string }> {
-    return apiClient.post<{ clientSecret: string; subscriptionId: string }>(`${BASE_URL}/subscriptions`, data);
+    const response = await axios.post(`${BASE_URL}/subscriptions`, data);
+    return response.data;
   },
 
   async getTeamSubscription(teamId: string): Promise<Subscription | null> {
-    return apiClient.get<Subscription | null>(`${BASE_URL}/teams/${teamId}/subscription`);
+    const response = await axios.get(`${BASE_URL}/teams/${teamId}/subscription`);
+    return response.data;
   },
 
   async getActivePlan(teamId: string): Promise<Plan | null> {
-    return apiClient.get<Plan | null>(`${BASE_URL}/teams/${teamId}/active-plan`);
+    const response = await axios.get(`${BASE_URL}/teams/${teamId}/active-plan`);
+    return response.data;
   },
 
   async getTeamInvoices(teamId: string, page: number = 1, limit: number = 10): Promise<{
@@ -78,25 +83,23 @@ const billingService = {
     limit: number;
     totalPages: number;
   }> {
-    return apiClient.get<{
-      invoices: Invoice[];
-      total: number;
-      page: number;
-      limit: number;
-      totalPages: number;
-    }>(`${BASE_URL}/teams/${teamId}/invoices?page=${page}&limit=${limit}`);
+    const response = await axios.get(`${BASE_URL}/teams/${teamId}/invoices?page=${page}&limit=${limit}`);
+    return response.data;
   },
 
   async repayInvoice(invoiceId: string, data: RepayInvoiceRequest = {}): Promise<{ clientSecret: string }> {
-    return apiClient.post<{ clientSecret: string }>(`${BASE_URL}/invoices/${invoiceId}/repay`, data);
+    const response = await axios.post(`${BASE_URL}/invoices/${invoiceId}/repay`, data);
+    return response.data;
   },
 
   async cancelSubscription(subscriptionId: string): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`${BASE_URL}/subscriptions/${subscriptionId}/cancel`);
+    const response = await axios.post(`${BASE_URL}/subscriptions/${subscriptionId}/cancel`);
+    return response.data;
   },
 
   async updateSubscription(subscriptionId: string, planId: number): Promise<{ message: string }> {
-    return apiClient.patch<{ message: string }>(`${BASE_URL}/subscriptions/${subscriptionId}`, { planId });
+    const response = await axios.patch(`${BASE_URL}/subscriptions/${subscriptionId}`, { planId });
+    return response.data;
   },
 };
 

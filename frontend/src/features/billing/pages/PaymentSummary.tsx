@@ -9,7 +9,7 @@ import { useActivePlan, type Plan } from '@/features/billing';
 import { useAuth } from '@/features/auth';
 import axios from '@/lib/axios';
 import { toast, useToast } from '@/components/ui/use-toast';
-import { useTeam } from '@/contexts/team/TeamContext';
+import { useTeam } from '@/features/team';
 
 const PaymentSummary = () => {
   const navigate = useNavigate();

@@ -17,7 +17,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { TeamSwitchModal } from '../modals/TeamSwitchModal';
 import { Toaster } from "@/components/ui/toaster";
-import { useTeam } from '@/contexts/team/TeamContext';
+import { useTeam } from '@/features/team';
 import { TEAM_ROLES } from '@/constants/teamRoles';
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => {

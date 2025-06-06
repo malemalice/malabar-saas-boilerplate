@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link as RouterLink, useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import axios from '@/lib/axios';
 import { useForm } from 'react-hook-form';
 import { useSignup } from '@/features/auth';
 import { Button } from '@/components/ui/button';

@@ -6,16 +6,15 @@ export type {
   Team,
   TeamMember,
   JoinedTeam,
+  CreateTeamRequest,
   InviteMemberRequest,
   UpdateMemberRoleRequest,
-  CreateTeamRequest,
 } from './api/team.service';
 
 // Team Hooks
 export {
   useMyTeam,
   useJoinedTeams,
-  useTeamById,
   useCreateTeam,
   useInviteMember,
   useAcceptInvitation,
@@ -27,4 +26,7 @@ export {
 } from './hooks/useTeam';
 
 // Team Context
-export { TeamProvider, useTeam } from '../../contexts/team/TeamContext'; 
+export { TeamProvider, useTeam } from './contexts/TeamContext';
+
+// Team Pages
+export { default as TeamPage } from './pages/Team'; 

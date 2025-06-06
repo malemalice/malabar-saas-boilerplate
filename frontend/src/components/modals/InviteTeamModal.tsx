@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TEAM_ROLES } from '@/constants/teamRoles';
 import { useInviteMember } from '@/features/team';
-import { useTeam } from '@/contexts/team/TeamContext';
+import { useTeam } from '@/features/team';
 import {
   Dialog,
   DialogContent,

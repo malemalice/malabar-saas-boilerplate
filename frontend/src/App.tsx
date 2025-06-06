@@ -4,26 +4,25 @@ import { Suspense, lazy } from 'react';
 
 import ErrorBoundary from './components/ErrorBoundary';
 import QueryErrorBoundary from './components/QueryErrorBoundary';
-import { AuthProvider, useAuth } from '@/features/auth';
+import { AuthProvider, useAuth, PublicRoute } from '@/features/auth';
 import { TeamProvider } from '@/features/team';
-import PublicRoute from './components/auth/PublicRoute';
 import RootLayout from './components/layout/root-layout';
 
 // Lazy load pages for code splitting
-const Login = lazy(() => import('./pages/Login'));
-const SignUp = lazy(() => import('./pages/SignUp'));
+const Login = lazy(() => import('./features/auth/pages/Login'));
+const SignUp = lazy(() => import('./features/auth/pages/SignUp'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Profile = lazy(() => import('./pages/Profile'));
-const Team = lazy(() => import('./pages/Team'));
-const VerifyEmail = lazy(() => import('./pages/VerifyEmail'));
-const VerifyPending = lazy(() => import('./pages/VerifyPending'));
-const ForgotPassword = lazy(() => import('./pages/ForgotPassword'));
-const ResetPassword = lazy(() => import('./pages/ResetPassword'));
-const Billing = lazy(() => import('./pages/Billing'));
-const Plans = lazy(() => import('./pages/Plans'));
-const PaymentSummary = lazy(() => import('./pages/PaymentSummary'));
-const PaymentSuccess = lazy(() => import('./pages/billing/PaymentSuccess'));
-const PaymentFailed = lazy(() => import('./pages/billing/PaymentFailed'));
+const Profile = lazy(() => import('./features/user/pages/Profile'));
+const Team = lazy(() => import('./features/team/pages/Team'));
+const VerifyEmail = lazy(() => import('./features/auth/pages/VerifyEmail'));
+const VerifyPending = lazy(() => import('./features/auth/pages/VerifyPending'));
+const ForgotPassword = lazy(() => import('./features/auth/pages/ForgotPassword'));
+const ResetPassword = lazy(() => import('./features/auth/pages/ResetPassword'));
+const Billing = lazy(() => import('./features/billing/pages/Billing'));
+const Plans = lazy(() => import('./features/billing/pages/Plans'));
+const PaymentSummary = lazy(() => import('./features/billing/pages/PaymentSummary'));
+const PaymentSuccess = lazy(() => import('./features/billing/pages/PaymentSuccess'));
+const PaymentFailed = lazy(() => import('./features/billing/pages/PaymentFailed'));
 
 const queryClient = new QueryClient({
   defaultOptions: {

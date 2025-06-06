@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useTeam } from '@/contexts/team/TeamContext';
+import { useTeam } from '@/features/team';
 import { TEAM_ROLES } from '@/constants/teamRoles';
 import { toast } from '@/components/ui/use-toast';
 import axios from '@/lib/axios';

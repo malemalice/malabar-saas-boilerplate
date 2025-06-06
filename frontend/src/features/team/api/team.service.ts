@@ -1,4 +1,4 @@
-import apiClient from '@/lib/api-client';
+import axios from '@/lib/axios';
 
 // Types
 export interface TeamMember {
@@ -42,43 +42,53 @@ const BASE_URL = '/teams';
 
 const teamService = {
   async getMyTeam(): Promise<Team> {
-    return apiClient.get<Team>(`${BASE_URL}/my-team`);
+    const response = await axios.get(`${BASE_URL}/my-team`);
+    return response.data;
   },
 
   async getJoinedTeams(): Promise<JoinedTeam[]> {
-    return apiClient.get<JoinedTeam[]>(`${BASE_URL}/joined`);
+    const response = await axios.get(`${BASE_URL}/joined`);
+    return response.data;
   },
 
   async getTeamById(teamId: string): Promise<Team> {
-    return apiClient.get<Team>(`${BASE_URL}/${teamId}`);
+    const response = await axios.get(`${BASE_URL}/${teamId}`);
+    return response.data;
   },
 
   async createTeam(data: CreateTeamRequest): Promise<Team> {
-    return apiClient.post<Team>(`${BASE_URL}`, data);
+    const response = await axios.post(`${BASE_URL}`, data);
+    return response.data;
   },
 
   async inviteMember(teamId: string, data: InviteMemberRequest): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`${BASE_URL}/${teamId}/invite`, data);
+    const response = await axios.post(`${BASE_URL}/${teamId}/invite`, data);
+    return response.data;
   },
 
   async acceptInvitation(teamId: string): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`${BASE_URL}/invitations/${teamId}/accept`);
+    const response = await axios.post(`${BASE_URL}/invitations/${teamId}/accept`);
+    return response.data;
   },
 
   async rejectInvitation(teamId: string): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>(`${BASE_URL}/invitations/${teamId}/reject`);
+    const response = await axios.post(`${BASE_URL}/invitations/${teamId}/reject`);
+    return response.data;
   },
 
   async updateMemberRole(teamId: string, userId: string, data: UpdateMemberRoleRequest): Promise<{ message: string }> {
-    return apiClient.patch<{ message: string }>(`${BASE_URL}/${teamId}/members/${userId}/role`, data);
+    const response = await axios.patch(`${BASE_URL}/${teamId}/members/${userId}/role`, data);
+    return response.data;
   },
 
   async removeMember(teamId: string, userId: string): Promise<{ message: string }> {
-    return apiClient.delete<{ message: string }>(`${BASE_URL}/${teamId}/members/${userId}`);
+    const response = await axios.delete(`${BASE_URL}/${teamId}/members/${userId}`);
+    return response.data;
   },
 
   async deleteTeam(teamId: string): Promise<{ message: string }> {
-    return apiClient.delete<{ message: string }>(`${BASE_URL}/${teamId}`);
+    const response = await axios.delete(`${BASE_URL}/${teamId}`);
+    return response.data;
   },
 };
 

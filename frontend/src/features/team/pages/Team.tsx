@@ -1,6 +1,6 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import { useJoinedTeams } from '@/features/team';
-import { useTeam } from '@/contexts/team/TeamContext';
+import { useTeam } from '@/features/team';
 import { useAuth } from '@/features/auth';
 import { InviteTeamModal } from '@/components/modals/InviteTeamModal';
 import { RoleChangeModal } from '@/components/modals/RoleChangeModal';
