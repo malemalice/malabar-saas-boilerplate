@@ -20,4 +20,4 @@ export class Role {
 
     @CreateDateColumn()
     createdAt: Date;
-}
+} 

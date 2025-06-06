@@ -3,7 +3,7 @@ import * as request from 'supertest';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { AuthService } from '../../src/auth/auth.service';
 import { TeamService } from '../../src/team/team.service';
-import { RoleType } from '../../src/role/role.entity';
+import { RoleType } from '../../src/role/entities/role.entity';
 import { Repository, DataSource } from 'typeorm';
 import { app } from '../setup';
 import { seedRoles } from '../utils/seed-roles';

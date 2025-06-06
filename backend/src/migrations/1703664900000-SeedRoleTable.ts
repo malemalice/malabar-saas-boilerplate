@@ -1,5 +1,5 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
-import { RoleType } from '../role/role.entity';
+import { RoleType } from '../role/entities/role.entity';
 
 export class SeedRoleTable1703664900000 implements MigrationInterface {
     public async up(queryRunner: QueryRunner): Promise<void> {

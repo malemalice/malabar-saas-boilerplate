@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { Team } from '../team.entity';
-import { User } from '../../user/user.entity';
+import { Team } from './team.entity';
+import { User } from '../../user/entities/user.entity';
 
 export enum TeamInvitationStatus {
     PENDING = 'pending',

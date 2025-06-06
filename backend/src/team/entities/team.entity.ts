@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, OneToMany, CreateDateColumn, JoinColumn, JoinTable } from 'typeorm';
-import { User } from '../user/user.entity';
-import { UserTeam } from './entities/user-team.entity';
+import { User } from '../../user/entities/user.entity';
+import { UserTeam } from './user-team.entity';
 
 @Entity('teams')
 export class Team {
@@ -22,4 +22,4 @@ export class Team {
 
     @CreateDateColumn()
     createdAt: Date;
-}
+} 

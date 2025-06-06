@@ -4,7 +4,7 @@ import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
-import { RoleType } from '../role/role.entity';
+import { RoleType } from '../role/entities/role.entity';
 import { BillingService } from './billing.service';
 import { Plan } from './entities/plan.entity';
 import { Subscription } from './entities/subscription.entity';

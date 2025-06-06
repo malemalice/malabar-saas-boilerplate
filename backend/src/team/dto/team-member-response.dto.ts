@@ -1,6 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsUUID } from 'class-validator';
-import { RoleType } from '../../role/role.entity';
+import { RoleType } from '../../role/entities/role.entity';
 import { UserTeamStatus } from '../enums/user-team-status.enum';
 
 export class TeamMemberResponseDto {

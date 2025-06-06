@@ -1,7 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany, ManyToOne, ManyToMany } from 'typeorm';
 import { Exclude } from 'class-transformer';
-import { VerificationToken } from '../auth/entities/verification-token.entity';
-import { Team } from '../team/team.entity';
+import { VerificationToken } from '../../auth/entities/verification-token.entity';
+import { Team } from '../../team/entities/team.entity';
 
 @Entity('users')
 export class User {
@@ -32,4 +32,4 @@ export class User {
 
   @ManyToMany(() => Team, team => team.members)
   teams: Team[];
-}
+} 
