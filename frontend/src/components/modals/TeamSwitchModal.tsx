@@ -84,7 +84,7 @@ export function TeamSwitchModal({ open, onOpenChange }: TeamSwitchModalProps) {
                 className="w-full justify-start text-left font-normal"
                 onClick={() => handleTeamSelect(team)}
               >
-                {team.name}
+                {`${team.name} Team`}
               </Button>
             ))
           )}

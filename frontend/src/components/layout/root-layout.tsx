@@ -17,7 +17,7 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { TeamSwitchModal } from '../modals/TeamSwitchModal';
 import { Toaster } from "@/components/ui/toaster";
-import { useTeam } from '@/features/team';
+import { useTeam, useJoinedTeams } from '@/features/team';
 import { TEAM_ROLES } from '@/constants/teamRoles';
 
 const RootLayout = ({ children }: { children: React.ReactNode }) => {
@@ -25,6 +25,7 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const [teamSwitchOpen, setTeamSwitchOpen] = useState(false);
   const { activeTeam } = useTeam();
+  const { data: joinedTeams } = useJoinedTeams();
 
   const getInitials = (name: string) => {
     return name
@@ -85,9 +86,15 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>
-                  <button onClick={() => setTeamSwitchOpen(true)} className="w-full text-left">
-                    {activeTeam?.name || 'Select Team'} (change)
-                  </button>
+                  {(joinedTeams && joinedTeams.length > 1) ? (
+                    <button onClick={() => setTeamSwitchOpen(true)} className="w-full text-left">
+                      {`${activeTeam?.name}'s Team` || 'Select Team'} (change)
+                    </button>
+                  ) : (
+                    <span className="w-full text-left text-gray-500">
+                      {`${activeTeam?.name}'s Team` || 'Current Team'}
+                    </span>
+                  )}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
 
@@ -101,7 +108,10 @@ const RootLayout = ({ children }: { children: React.ReactNode }) => {
                     Team
                   </Link>
                 </DropdownMenuItem>
-                {(activeTeam?.role === TEAM_ROLES.OWNER || activeTeam?.role === TEAM_ROLES.BILLING) && (
+                {(() => {
+                  const showBilling = activeTeam?.role === TEAM_ROLES.OWNER || activeTeam?.role === TEAM_ROLES.BILLING;
+                  return showBilling;
+                })() && (
                   <DropdownMenuItem>
                     <Link to="/billing" className="w-full">
                       Billing

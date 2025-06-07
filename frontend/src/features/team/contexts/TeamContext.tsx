@@ -35,8 +35,20 @@ export const TeamProvider: React.FC<TeamProviderProps> = ({ children }) => {
     const storedTeamName = localStorage.getItem('activeTeamName');
     const storedRole = localStorage.getItem('activeTeamRole');
     
-    return storedTeamId && storedTeamName && storedRole 
-      ? { id: storedTeamId, name: storedTeamName, role: storedRole as TeamRole } 
+    // Normalize the stored role to match our constants
+    let normalizedStoredRole: TeamRole | null = null;
+    if (storedRole) {
+      if (storedRole.toLowerCase() === 'owner') {
+        normalizedStoredRole = TEAM_ROLES.OWNER;
+      } else if (storedRole.toLowerCase() === 'admin') {
+        normalizedStoredRole = TEAM_ROLES.ADMIN;
+      } else if (storedRole.toLowerCase() === 'billing') {
+        normalizedStoredRole = TEAM_ROLES.BILLING;
+      }
+    }
+    
+    return storedTeamId && storedTeamName && normalizedStoredRole 
+      ? { id: storedTeamId, name: storedTeamName, role: normalizedStoredRole } 
       : null;
   });
 
@@ -68,10 +80,31 @@ export const TeamProvider: React.FC<TeamProviderProps> = ({ children }) => {
     // Find the current user's role in the team
     const team = safeJoinedTeams.find(t => t.id === teamId);
     const currentUserMember = team?.members?.find(member => member.email === user?.email);
-    const role = currentUserMember?.role || TEAM_ROLES.ADMIN;
+    const rawRole = currentUserMember?.role || TEAM_ROLES.ADMIN;
     
-    localStorage.setItem('activeTeamRole', FirstLetterUpper(role));
-    setActiveTeam({ id: teamId, name: teamName, role: role as TeamRole });
+    // Ensure role matches our constants exactly
+    let normalizedRole: TeamRole;
+    if (rawRole.toLowerCase() === 'owner') {
+      normalizedRole = TEAM_ROLES.OWNER;
+    } else if (rawRole.toLowerCase() === 'admin') {
+      normalizedRole = TEAM_ROLES.ADMIN;
+    } else if (rawRole.toLowerCase() === 'billing') {
+      normalizedRole = TEAM_ROLES.BILLING;
+    } else {
+      normalizedRole = TEAM_ROLES.ADMIN; // Default fallback
+    }
+    
+    console.log('Team switch debug:', {
+      teamId,
+      teamName,
+      userEmail: user?.email,
+      rawRole,
+      normalizedRole,
+      teamMembers: team?.members?.map(m => ({ email: m.email, role: m.role }))
+    });
+    
+    localStorage.setItem('activeTeamRole', normalizedRole);
+    setActiveTeam({ id: teamId, name: teamName, role: normalizedRole });
   };
 
   const value: TeamContextType = {
