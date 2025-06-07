@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { useLogin } from '@/features/auth';
 import { Button } from '@/components/ui/button';

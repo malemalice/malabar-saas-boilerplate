@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate, Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
 import {
@@ -23,7 +23,6 @@ const formSchema = z.object({
 type ForgotPasswordForm = z.infer<typeof formSchema>;
 
 const ForgotPassword = () => {
-  const navigate = useNavigate();
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const form = useForm<ForgotPasswordForm>({

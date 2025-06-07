@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import billingService from '../api/billing.service';
-import type { Plan, CreateSubscriptionRequest } from '../api/billing.service';
+import type { CreateSubscriptionRequest } from '../api/billing.service';
 
 // Query Keys
 export const billingKeys = {

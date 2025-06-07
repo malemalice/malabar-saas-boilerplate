@@ -41,27 +41,27 @@ const Dashboard = () => {
               <button
                 onClick={() => {
                   if (!user?.email) return;
-                  setIsResending(true);
-                  setResendStatus(null);
+                    setIsResending(true);
+                    setResendStatus(null);
                   resendVerificationMutation.mutate(user.email, {
                     onSuccess: (data) => {
-                      setResendStatus({
-                        type: 'success',
+                    setResendStatus({
+                      type: 'success',
                         message: data.message,
                         nextResendTime: data.nextResendTime
-                      });
+                    });
                       setIsResending(false);
                     },
                     onError: (error: any) => {
-                      const errorMessage = error.response?.data?.message || 'Failed to resend verification email';
-                      const nextResendTime = error.response?.data?.nextResendTime;
-                      setResendStatus({
-                        type: 'error',
-                        message: errorMessage,
-                        ...(nextResendTime && { nextResendTime })
-                      });
-                      setIsResending(false);
-                    }
+                    const errorMessage = error.response?.data?.message || 'Failed to resend verification email';
+                    const nextResendTime = error.response?.data?.nextResendTime;
+                    setResendStatus({
+                      type: 'error',
+                      message: errorMessage,
+                      ...(nextResendTime && { nextResendTime })
+                    });
+                    setIsResending(false);
+                  }
                   });
                 }}
                 disabled={isResending || timeUntilResend !== null}

@@ -5,10 +5,10 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { useActivePlan, type Plan } from '@/features/billing';
+import type { Plan } from '@/features/billing';
 import { useAuth } from '@/features/auth';
 import axios from '@/lib/axios';
-import { toast, useToast } from '@/components/ui/use-toast';
+import { toast } from '@/components/ui/use-toast';
 import { useTeam } from '@/features/team';
 
 const PaymentSummary = () => {
@@ -41,13 +41,7 @@ const PaymentSummary = () => {
     }
   }, [navigate, user]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setBillingInfo(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
+  // handleInputChange removed as inputs are disabled
 
   const handlePayment = async () => {
     if (!selectedPlan) return;

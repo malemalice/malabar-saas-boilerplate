@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUpdateMemberRole } from '@/features/team';
-import { useTeam } from '@/features/team';
 
 interface RoleChangeModalProps {
   open: boolean;
@@ -29,7 +28,7 @@ export function RoleChangeModal({ open, onOpenChange, teamId, userId, email, cur
   const updateMemberRoleMutation = useUpdateMemberRole();
 
   const handleSubmit = () => {
-    if (!userId) {
+      if (!userId) {
       toast({
         title: 'Error',
         description: 'User ID is required',
@@ -40,20 +39,20 @@ export function RoleChangeModal({ open, onOpenChange, teamId, userId, email, cur
 
     updateMemberRoleMutation.mutate({ teamId, userId, role }, {
       onSuccess: () => {
-        toast({
-          title: 'Success',
-          description: 'Member role updated successfully',
-        });
-        onOpenChange(false);
+      toast({
+        title: 'Success',
+        description: 'Member role updated successfully',
+      });
+      onOpenChange(false);
       },
       onError: (error: any) => {
-        console.error('Error updating role:', error);
-        toast({
-          title: 'Error',
+      console.error('Error updating role:', error);
+      toast({
+        title: 'Error',
           description: error.response?.data?.message || 'Failed to update member role',
-          variant: 'destructive',
-        });
-      }
+        variant: 'destructive',
+      });
+    }
     });
   };
 

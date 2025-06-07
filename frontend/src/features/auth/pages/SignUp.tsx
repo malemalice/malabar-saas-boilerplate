@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link as RouterLink, useSearchParams } from 'react-router-dom';
+import { Link as RouterLink, useSearchParams } from 'react-router-dom';
 import axios from '@/lib/axios';
 import { useForm } from 'react-hook-form';
 import { useSignup } from '@/features/auth';
@@ -33,7 +33,7 @@ const SignUp = () => {
   const signupMutation = useSignup();
   const [error, setError] = useState('');
   const [searchParams] = useSearchParams();
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, setIsLoading] = useState(false);
   const token = searchParams.get('token');
   useEffect(() => {
     const fetchInvitationDetails = async () => {

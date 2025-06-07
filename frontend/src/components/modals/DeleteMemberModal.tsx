@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -24,7 +23,7 @@ export function DeleteMemberModal({ open, onOpenChange, teamId, userId, email }:
   const removeMemberMutation = useRemoveMember();
 
   const handleDelete = () => {
-    if (!userId) {
+      if (!userId) {
       toast({
         title: 'Error',
         description: 'User ID is required',
@@ -35,20 +34,20 @@ export function DeleteMemberModal({ open, onOpenChange, teamId, userId, email }:
 
     removeMemberMutation.mutate({ teamId, userId }, {
       onSuccess: () => {
-        toast({
-          title: 'Success',
-          description: 'Team member removed successfully',
-        });
-        onOpenChange(false);
+      toast({
+        title: 'Success',
+        description: 'Team member removed successfully',
+      });
+      onOpenChange(false);
       },
       onError: (error: any) => {
-        console.error('Error removing member:', error);
-        toast({
-          title: 'Error',
+      console.error('Error removing member:', error);
+      toast({
+        title: 'Error',
           description: error.response?.data?.message || 'Failed to remove team member',
-          variant: 'destructive',
-        });
-      }
+        variant: 'destructive',
+      });
+    }
     });
   };
 

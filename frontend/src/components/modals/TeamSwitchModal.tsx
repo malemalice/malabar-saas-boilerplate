@@ -7,7 +7,6 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { useJoinedTeams } from '@/features/team';
 import { useTeam } from '@/features/team';
 import axios from '@/lib/axios';
 

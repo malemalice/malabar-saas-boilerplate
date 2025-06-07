@@ -82,10 +82,10 @@ const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
 const App = () => {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
         <Router>
           <AuthProvider>
-            <Routes>
+          <Routes>
               {/* Public Routes */}
               <Route 
                 path="/login" 
@@ -139,93 +139,93 @@ const App = () => {
               } />
 
               {/* Private Routes */}
-              <Route
-                path="/dashboard"
-                element={
-                  <PrivateRoute>
-                    <RootLayout>
-                      <Dashboard />
-                    </RootLayout>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/profile"
-                element={
-                  <PrivateRoute>
-                    <RootLayout>
-                      <Profile />
-                    </RootLayout>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/team"
-                element={
-                  <PrivateRoute>
-                    <RootLayout>
-                      <Team />
-                    </RootLayout>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/billing"
-                element={
-                  <PrivateRoute>
-                    <RootLayout>
-                      <Billing />
-                    </RootLayout>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/plans"
-                element={
-                  <PrivateRoute>
-                    <RootLayout>
-                      <Plans />
-                    </RootLayout>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/payment-summary"
-                element={
-                  <PrivateRoute>
-                    <RootLayout>
-                      <PaymentSummary />
-                    </RootLayout>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/billing/success"
-                element={
-                  <PrivateRoute>
-                    <RootLayout>
-                      <PaymentSuccess />
-                    </RootLayout>
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/billing/failed"
-                element={
-                  <PrivateRoute>
-                    <RootLayout>
-                      <PaymentFailed />
-                    </RootLayout>
-                  </PrivateRoute>
-                }
-              />
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
+                    <Dashboard />
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
+                    <Profile />
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/team"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
+                    <Team />
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/billing"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
+                    <Billing />
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/plans"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
+                    <Plans />
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/payment-summary"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
+                    <PaymentSummary />
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/billing/success"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
+                  <PaymentSuccess />
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/billing/failed"
+              element={
+                <PrivateRoute>
+                  <RootLayout>
+                  <PaymentFailed />
+                  </RootLayout>
+                </PrivateRoute>
+              }
+            />
               
               {/* Redirect root to login */}
-              <Route path="/" element={<Navigate to="/login" />} />
-            </Routes>
+            <Route path="/" element={<Navigate to="/login" />} />
+          </Routes>
           </AuthProvider>
         </Router>
-      </QueryClientProvider>
+    </QueryClientProvider>
     </ErrorBoundary>
   );
 };

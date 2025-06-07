@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import teamService from '../api/team.service';
-import type { Team, JoinedTeam, InviteMemberRequest } from '../api/team.service';
 
 // Query Keys
 export const teamKeys = {

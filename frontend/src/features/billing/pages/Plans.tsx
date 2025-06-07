@@ -33,29 +33,7 @@ const Plans = () => {
     );
   }
 
-  const planFeatures = {
-    'Free': [
-      '5 Users',
-      '100 Submissions/Month',
-      'Basic Support',
-      'Core Features'
-    ],
-    'Premium': [
-      '20 Users',
-      '1000 Submissions/Month',
-      'Priority Support',
-      'Advanced Analytics',
-      'Custom Branding'
-    ],
-    'Enterprise': [
-      'Unlimited Users',
-      'Unlimited Submissions',
-      '24/7 Support',
-      'Advanced Security',
-      'Custom Integration',
-      'Dedicated Account Manager'
-    ]
-  };
+  // planFeatures removed as features come from API data
 
   const handleSelect = (planName: string) => {
     const selectedPlan = plans.find((p: Plan) => p.name === planName);

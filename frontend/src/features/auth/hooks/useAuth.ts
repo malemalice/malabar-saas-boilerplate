@@ -12,7 +12,6 @@ export const authKeys = {
 
 // Get current user
 export const useCurrentUser = () => {
-  const queryClient = useQueryClient();
   const [hasToken, setHasToken] = useState(!!localStorage.getItem('accessToken'));
   
   useEffect(() => {

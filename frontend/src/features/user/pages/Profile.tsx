@@ -11,7 +11,6 @@ import {
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import axios from '@/lib/axios';
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";

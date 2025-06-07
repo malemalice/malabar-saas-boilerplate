@@ -56,15 +56,15 @@ export function InviteTeamModal() {
       role: data.role.toLowerCase()
     }, {
       onSuccess: () => {
-        setOpen(false);
-        form.reset();
+      setOpen(false);
+      form.reset();
       },
       onError: (error: any) => {
         form.setError('email', { 
           message: error.response?.data?.message || 'Failed to invite team member. Please try again.' 
         });
-        console.error('Failed to invite team member:', error);
-      }
+      console.error('Failed to invite team member:', error);
+    }
     });
   };
 

@@ -1,7 +1,6 @@
 import { Pencil, Trash2 } from 'lucide-react';
 import { useJoinedTeams } from '@/features/team';
 import { useTeam } from '@/features/team';
-import { useAuth } from '@/features/auth';
 import { InviteTeamModal } from '@/components/modals/InviteTeamModal';
 import { RoleChangeModal } from '@/components/modals/RoleChangeModal';
 import { DeleteMemberModal } from '@/components/modals/DeleteMemberModal';
@@ -12,7 +11,6 @@ import { TEAM_ROLES } from '@/constants/teamRoles';
 
 const Team = () => {
   const { activeTeam } = useTeam();
-  const { user } = useAuth();
   const { data: joinedTeams, isLoading: joinedLoading, error: joinedError } = useJoinedTeams();
   const [selectedMember, setSelectedMember] = useState<{
     userId: string;
