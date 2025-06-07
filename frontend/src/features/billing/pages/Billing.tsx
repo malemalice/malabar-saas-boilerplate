@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTeamInvoices, useActivePlan } from '@/features/billing';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DataTable, DataTableColumn } from '@/components/ui/data-table';
 import { useTeam } from '@/features/team';
 import { TEAM_ROLES } from '@/constants/teamRoles';
 import { toast } from '@/components/ui/use-toast';
@@ -59,6 +58,50 @@ const Billing = () => {
     // Handle cancel logic here
     console.log('Cancel invoice:', invoiceId);
   };
+
+  const invoiceColumns: DataTableColumn<any>[] = [
+    {
+      key: 'issuedAt',
+      header: 'Issued At',
+      render: (invoice) => new Date(invoice.invoiceDate).toLocaleDateString(),
+    },
+    {
+      key: 'plan',
+      header: 'Plan',
+      render: (invoice) => invoice.subscriptionId,
+    },
+    {
+      key: 'dueDate',
+      header: 'Due Date',
+      render: (invoice) => new Date(invoice.dueDate).toLocaleDateString(),
+    },
+    {
+      key: 'total',
+      header: 'Total',
+      render: (invoice) => `$${invoice.amount}`,
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      render: (invoice) => (
+        <span className={`capitalize ${invoice.status.toLowerCase() === 'paid' ? 'text-green-600' : 'text-red-600'}`}>
+          {invoice.status}
+        </span>
+      ),
+    },
+    {
+      key: 'action',
+      header: 'Action',
+      render: (invoice) => (
+        invoice.status.toLowerCase() === 'unpaid' && (
+          <div className="flex gap-2">
+            <Button size="sm" onClick={() => handlePay(invoice.id)}>Pay</Button>
+            <Button size="sm" variant="outline" onClick={() => handleCancel(invoice.id)}>Cancel</Button>
+          </div>
+        )
+      ),
+    },
+  ];
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -154,94 +197,21 @@ const Billing = () => {
           <CardTitle>Invoices</CardTitle>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Issued At</TableHead>
-                <TableHead>Plan</TableHead>
-                <TableHead>Due Date</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {invoicesLoading ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center">Loading...</TableCell>
-                </TableRow>
-              ) : invoicesError ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-red-600">Failed to load invoices</TableCell>
-                </TableRow>
-              ) : invoices.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center">No invoices found</TableCell>
-                </TableRow>
-              ) : (
-                invoices.map((invoice) => (
-                  <TableRow key={invoice.id}>
-                    <TableCell>{new Date(invoice.invoiceDate).toLocaleDateString()}</TableCell>
-                    <TableCell>{invoice.subscriptionId}</TableCell>
-                    <TableCell>{new Date(invoice.dueDate).toLocaleDateString()}</TableCell>
-                    <TableCell>${invoice.amount}</TableCell>
-                    <TableCell>
-                      <span className={`capitalize ${invoice.status.toLowerCase() === 'paid' ? 'text-green-600' : 'text-red-600'}`}>
-                        {invoice.status}
-                      </span>
-                    </TableCell>
-                    <TableCell>
-                      {invoice.status.toLowerCase() === 'unpaid' && (
-                        <div className="flex gap-2">
-                          <Button size="sm" onClick={() => handlePay(invoice.id)}>Pay</Button>
-                          <Button size="sm" variant="outline" onClick={() => handleCancel(invoice.id)}>Cancel</Button>
-                        </div>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
-
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center gap-2">
-              <span className="text-sm">Rows per page:</span>
-              <Select value={rowsPerPage} onValueChange={setRowsPerPage}>
-                <SelectTrigger className="w-[70px]">
-                  <SelectValue placeholder="10" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="5">5</SelectItem>
-                  <SelectItem value="10">10</SelectItem>
-                  <SelectItem value="20">20</SelectItem>
-                  <SelectItem value="50">50</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="flex items-center gap-2">
-              <span className="text-sm">Page {meta.page} of {meta.totalPages}</span>
-              <div className="flex gap-1">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage <= 1}
-                >
-                  &lt;
-                </Button>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage >= meta.totalPages}
-                >
-                  &gt;
-                </Button>
-              </div>
-            </div>
-          </div>
+          <DataTable
+            data={invoices}
+            columns={invoiceColumns}
+            isLoading={invoicesLoading}
+            error={!!invoicesError}
+            emptyMessage="No invoices found"
+            showPagination={true}
+            currentPage={meta.page}
+            totalPages={meta.totalPages}
+            rowsPerPage={rowsPerPage}
+            totalItems={meta.total}
+            onPageChange={setCurrentPage}
+            onRowsPerPageChange={setRowsPerPage}
+            getRowKey={(invoice) => invoice.id}
+          />
         </CardContent>
       </Card>
     </div>
