@@ -84,13 +84,40 @@ axiosInstance.interceptors.response.use(
         axiosInstance.defaults.headers.common['Authorization'] = `Bearer ${data.accessToken}`;
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`;
 
+        // Trigger storage event to notify all components
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'accessToken',
+          oldValue: localStorage.getItem('accessToken'),
+          newValue: data.accessToken,
+          storageArea: localStorage
+        }));
+
         processQueue();
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError);
+        
+        // Clear all auth-related data
+        const oldToken = localStorage.getItem('accessToken');
         localStorage.removeItem('accessToken');
         localStorage.removeItem('refreshToken');
-        window.location.href = '/login';
+        localStorage.removeItem('activeTeamId');
+        localStorage.removeItem('activeTeamName');
+        localStorage.removeItem('activeTeamRole');
+        
+        // Trigger storage event to notify all components immediately
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'accessToken',
+          oldValue: oldToken,
+          newValue: null,
+          storageArea: localStorage
+        }));
+        
+        // Small delay to allow React state updates, then redirect
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 100);
+        
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
