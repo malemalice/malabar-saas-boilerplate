@@ -13,12 +13,19 @@ export const authKeys = {
 // Get current user
 export const useCurrentUser = () => {
   const [hasToken, setHasToken] = useState(!!localStorage.getItem('accessToken'));
+  const queryClient = useQueryClient();
   
   useEffect(() => {
     // Update hasToken state when localStorage changes
     const checkToken = () => {
       const tokenExists = !!localStorage.getItem('accessToken');
       setHasToken(tokenExists);
+      
+      // If token was removed, immediately clear user data from cache
+      if (!tokenExists) {
+        queryClient.setQueryData(authKeys.me(), null);
+        queryClient.removeQueries({ queryKey: authKeys.me() });
+      }
     };
     
     // Listen for storage events (from other tabs and manual dispatches)
@@ -30,7 +37,7 @@ export const useCurrentUser = () => {
     return () => {
       window.removeEventListener('storage', checkToken);
     };
-  }, []);
+  }, [queryClient]);
   
   const query = useQuery({
     queryKey: authKeys.me(),
@@ -38,6 +45,23 @@ export const useCurrentUser = () => {
     retry: false,
     staleTime: 5 * 60 * 1000, // 5 minutes
     enabled: hasToken, // Only fetch if we have a token
+    onError: (error: any) => {
+      // Handle authentication errors
+      if (error?.response?.status === 401) {
+        console.log('User authentication failed, clearing token');
+        localStorage.removeItem('accessToken');
+        localStorage.removeItem('refreshToken');
+        setHasToken(false);
+        
+        // Trigger storage event to notify other components
+        window.dispatchEvent(new StorageEvent('storage', {
+          key: 'accessToken',
+          oldValue: localStorage.getItem('accessToken'),
+          newValue: null,
+          storageArea: localStorage
+        }));
+      }
+    }
   });
   
   // When no token, return immediately with no loading state

@@ -7,6 +7,8 @@ import QueryErrorBoundary from './components/QueryErrorBoundary';
 import { AuthProvider, useAuth, PublicRoute } from '@/features/auth';
 import { TeamProvider } from '@/features/team';
 import RootLayout from './components/layout/root-layout';
+import { handleQueryError } from '@/lib/queryErrorHandler';
+import AuthDebugInfo from './components/AuthDebugInfo';
 
 // Lazy load pages for code splitting
 const Login = lazy(() => import('./features/auth/pages/Login'));
@@ -29,6 +31,9 @@ const queryClient = new QueryClient({
     queries: {
       retry: (failureCount, error: any) => {
         // Don't retry on 401/403 errors
+        if (error?.response?.status === 401 || error?.response?.status === 403) {
+          return false;
+        }
         if (error?.statusCode === 401 || error?.statusCode === 403) {
           return false;
         }
@@ -42,6 +47,9 @@ const queryClient = new QueryClient({
     mutations: {
       retry: (failureCount, error: any) => {
         // Don't retry on 4xx errors
+        if (error?.response?.status >= 400 && error?.response?.status < 500) {
+          return false;
+        }
         if (error?.statusCode >= 400 && error?.statusCode < 500) {
           return false;
         }
@@ -50,6 +58,15 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// Global error handler for all queries and mutations
+queryClient.getQueryCache().config.onError = (error: any) => {
+  handleQueryError(error);
+};
+
+queryClient.getMutationCache().config.onError = (error: any) => {
+  handleQueryError(error);
+};
 
 const LoadingSpinner = () => (
   <div className="min-h-screen flex items-center justify-center">
@@ -60,11 +77,14 @@ const LoadingSpinner = () => (
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, isLoading } = useAuth();
   
-  if (isLoading) {
+  // Always check for token existence as well
+  const hasToken = !!localStorage.getItem('accessToken');
+  
+  if (isLoading && hasToken) {
     return <LoadingSpinner />;
   }
   
-  if (!isAuthenticated) {
+  if (!isAuthenticated || !hasToken) {
     return <Navigate to="/login" replace />;
   }
   
@@ -85,6 +105,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
         <Router>
           <AuthProvider>
+            <AuthDebugInfo />
           <Routes>
               {/* Public Routes */}
               <Route 
