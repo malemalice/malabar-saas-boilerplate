@@ -1,5 +1,5 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
-import { Team } from '../../team/team.entity';
+import { Team } from '../../team/entities/team.entity';
 import { Subscription } from './subscription.entity';
 import { Payment } from './payment.entity';
 

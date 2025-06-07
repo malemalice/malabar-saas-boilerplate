@@ -2,8 +2,8 @@ import { Injectable, NotFoundException, ConflictException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan } from 'typeorm';
 import * as crypto from 'crypto';
-import { Team } from './team.entity';
-import { User } from '../user/user.entity';
+import { Team } from './entities/team.entity';
+import { User } from '../user/entities/user.entity';
 import { UserService } from '../user/user.service';
 import { UserTeam } from './entities/user-team.entity';
 import { UserTeamStatus } from './enums/user-team-status.enum';
@@ -11,7 +11,7 @@ import { TeamInvitation } from './entities/team-invitation.entity';
 import { TeamInvitationStatus } from './entities/team-invitation.entity';
 import { MailerService } from '@nestjs-modules/mailer';
 import { ConfigService } from '@nestjs/config';
-import { Role, RoleType } from '../role/role.entity';
+import { Role, RoleType } from '../role/entities/role.entity';
 import { RoleService } from '../role/role.service';
 
 @Injectable()

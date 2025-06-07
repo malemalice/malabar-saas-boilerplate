@@ -11,7 +11,7 @@ import { TEAM_ROLES } from '@/constants/teamRoles';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useTeam } from '@/contexts/TeamContext';
+import { useUpdateMemberRole } from '@/features/team';
 
 interface RoleChangeModalProps {
   open: boolean;
@@ -24,33 +24,36 @@ interface RoleChangeModalProps {
 
 export function RoleChangeModal({ open, onOpenChange, teamId, userId, email, currentRole }: RoleChangeModalProps) {
   const [role, setRole] = useState(currentRole);
-  const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const updateMemberRoleMutation = useUpdateMemberRole();
 
-  const { updateMemberRole } = useTeam();
-
-  const handleSubmit = async () => {
-    try {
-      setIsLoading(true);
+  const handleSubmit = () => {
       if (!userId) {
-        throw new Error('User ID is required');
-      }
-      await updateMemberRole(userId, role);
+      toast({
+        title: 'Error',
+        description: 'User ID is required',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    updateMemberRoleMutation.mutate({ teamId, userId, role }, {
+      onSuccess: () => {
       toast({
         title: 'Success',
         description: 'Member role updated successfully',
       });
       onOpenChange(false);
-    } catch (error) {
+      },
+      onError: (error: any) => {
       console.error('Error updating role:', error);
       toast({
         title: 'Error',
-        description: error instanceof Error ? error.message : 'Failed to update member role',
+          description: error.response?.data?.message || 'Failed to update member role',
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
     }
+    });
   };
 
   return (
@@ -68,7 +71,7 @@ export function RoleChangeModal({ open, onOpenChange, teamId, userId, email, cur
             <Select
               value={role}
               onValueChange={setRole}
-              disabled={isLoading}
+              disabled={updateMemberRoleMutation.isLoading}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select a role" />
@@ -84,15 +87,15 @@ export function RoleChangeModal({ open, onOpenChange, teamId, userId, email, cur
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
-            disabled={isLoading}
+            disabled={updateMemberRoleMutation.isLoading}
           >
             Cancel
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isLoading || role === currentRole}
+            disabled={updateMemberRoleMutation.isLoading || role === currentRole}
           >
-            Change
+            {updateMemberRoleMutation.isLoading ? 'Changing...' : 'Change'}
           </Button>
         </DialogFooter>
       </DialogContent>

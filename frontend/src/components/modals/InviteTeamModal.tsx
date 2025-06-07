@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { TEAM_ROLES } from '@/constants/teamRoles';
-import { useTeam } from '@/contexts/TeamContext';
+import { useInviteMember } from '@/features/team';
+import { useTeam } from '@/features/team';
 import {
   Dialog,
   DialogContent,
@@ -33,7 +34,8 @@ type InviteFormValues = z.infer<typeof inviteFormSchema>;
 
 export function InviteTeamModal() {
   const [open, setOpen] = useState(false);
-  const { inviteMember } = useTeam();
+  const { activeTeam } = useTeam();
+  const inviteMemberMutation = useInviteMember();
   const form = useForm<InviteFormValues>({
     resolver: zodResolver(inviteFormSchema),
     defaultValues: {
@@ -42,15 +44,28 @@ export function InviteTeamModal() {
     },
   });
 
-  const onSubmit = async (data: InviteFormValues) => {
-    try {
-      await inviteMember(data.email, data.role.toLowerCase());
+  const onSubmit = (data: InviteFormValues) => {
+    if (!activeTeam?.id) {
+      form.setError('email', { message: 'No active team selected' });
+      return;
+    }
+
+    inviteMemberMutation.mutate({
+      teamId: activeTeam.id,
+      email: data.email,
+      role: data.role.toLowerCase()
+    }, {
+      onSuccess: () => {
       setOpen(false);
       form.reset();
-    } catch (error) {
-      form.setError('email', { message: 'Failed to invite team member. Please try again.' });
+      },
+      onError: (error: any) => {
+        form.setError('email', { 
+          message: error.response?.data?.message || 'Failed to invite team member. Please try again.' 
+        });
       console.error('Failed to invite team member:', error);
     }
+    });
   };
 
   return (
@@ -103,7 +118,9 @@ export function InviteTeamModal() {
               )}
             />
             <DialogFooter>
-              <Button type="submit">Invite</Button>
+              <Button type="submit" disabled={inviteMemberMutation.isLoading}>
+                {inviteMemberMutation.isLoading ? 'Inviting...' : 'Invite'}
+              </Button>
             </DialogFooter>
           </form>
         </Form>

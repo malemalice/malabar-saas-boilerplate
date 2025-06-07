@@ -1,6 +1,6 @@
 import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { Plan } from './plan.entity';
-import { Team } from '../../team/team.entity';
+import { Team } from '../../team/entities/team.entity';
 import { Invoice } from './invoice.entity';
 import { join } from 'path';
 

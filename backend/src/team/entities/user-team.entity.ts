@@ -1,7 +1,7 @@
 import { Entity, PrimaryColumn, Column, ManyToOne, CreateDateColumn, JoinColumn } from 'typeorm';
-import { User } from '../../user/user.entity';
-import { Team } from '../team.entity';
-import { Role } from '../../role/role.entity';
+import { User } from '../../user/entities/user.entity';
+import { Team } from './team.entity';
+import { Role } from '../../role/entities/role.entity';
 import { UserTeamStatus } from '../enums/user-team-status.enum';
 
 @Entity('user_teams')

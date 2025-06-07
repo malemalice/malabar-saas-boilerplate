@@ -4,7 +4,7 @@ import { TeamService } from './team.service';
 import { CreateTeamDto, AddTeamMemberDto, TeamResponseDto, InviteTeamMemberDto, TeamInvitationResponseDto } from './dto/team.dto';
 import { UpdateTeamMemberRoleDto } from './dto/update-team-member-role.dto';
 import { TeamMemberResponseDto } from './dto/team-member-response.dto';
-import { RoleType } from 'src/role/role.entity';
+import { RoleType } from 'src/role/entities/role.entity';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { RolesGuard } from 'src/auth/roles.guard';
 import { Roles } from 'src/auth/roles.decorator';

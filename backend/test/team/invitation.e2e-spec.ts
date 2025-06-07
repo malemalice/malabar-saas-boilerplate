@@ -1,15 +1,15 @@
 import { INestApplication } from '@nestjs/common';
 import * as request from 'supertest';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { User } from '../../src/user/user.entity';
-import { Team } from '../../src/team/team.entity';
+import { User } from '../../src/user/entities/user.entity';
+import { Team } from '../../src/team/entities/team.entity';
 import { TeamInvitation } from '../../src/team/entities/team-invitation.entity';
 import { Repository, DataSource } from 'typeorm';
 import { app } from '../setup';
 import { seedRoles } from '../utils/seed-roles';
 import { UserTeam } from 'src/team/entities/user-team.entity';
 import { UserTeamStatus } from 'src/team/enums/user-team-status.enum';
-import { RoleType } from 'src/role/role.entity';
+import { RoleType } from 'src/role/entities/role.entity';
 
 describe('Team Invitation (e2e)', () => {
   let userRepository: Repository<User>;

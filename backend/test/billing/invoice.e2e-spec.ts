@@ -8,8 +8,8 @@ import { Invoice, InvoiceStatus } from '../../src/billing/entities/invoice.entit
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { seedPlans } from '../utils/seed-plans';
-import { User } from '../../src/user/user.entity';
-import { Team } from '../../src/team/team.entity';
+import { User } from '../../src/user/entities/user.entity';
+import { Team } from '../../src/team/entities/team.entity';
 import { seedRoles } from '../utils/seed-roles';
 
 describe('BillingController - Invoices (e2e)', () => {

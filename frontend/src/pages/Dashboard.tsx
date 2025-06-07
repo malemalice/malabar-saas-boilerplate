@@ -1,9 +1,10 @@
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, useResendVerification } from '@/features/auth';
 import { useState, useEffect } from 'react';
 import { AlertCircle } from 'lucide-react';
 
 const Dashboard = () => {
-  const { user, resendVerification } = useAuth();
+  const { user } = useAuth();
+  const resendVerificationMutation = useResendVerification();
   const [showVerificationAlert, setShowVerificationAlert] = useState(true);
   const [isResending, setIsResending] = useState(false);
   const [resendStatus, setResendStatus] = useState<{ type: 'success' | 'error'; message: string; nextResendTime?: Date } | null>(null);
@@ -38,17 +39,20 @@ const Dashboard = () => {
             Please verify your email address to access all features. Check your inbox for the verification link.
             <div className="mt-2 flex items-center gap-2">
               <button
-                onClick={async () => {
-                  try {
+                onClick={() => {
+                  if (!user?.email) return;
                     setIsResending(true);
                     setResendStatus(null);
-                    const { message, nextResendTime } = await resendVerification();
+                  resendVerificationMutation.mutate(user.email, {
+                    onSuccess: (data) => {
                     setResendStatus({
                       type: 'success',
-                      message,
-                      nextResendTime
+                        message: data.message,
+                        nextResendTime: data.nextResendTime
                     });
-                  } catch (error: any) {
+                      setIsResending(false);
+                    },
+                    onError: (error: any) => {
                     const errorMessage = error.response?.data?.message || 'Failed to resend verification email';
                     const nextResendTime = error.response?.data?.nextResendTime;
                     setResendStatus({
@@ -56,9 +60,9 @@ const Dashboard = () => {
                       message: errorMessage,
                       ...(nextResendTime && { nextResendTime })
                     });
-                  } finally {
                     setIsResending(false);
                   }
+                  });
                 }}
                 disabled={isResending || timeUntilResend !== null}
                 className="text-yellow-800 hover:text-yellow-900 dark:text-yellow-500 dark:hover:text-yellow-400 underline text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
