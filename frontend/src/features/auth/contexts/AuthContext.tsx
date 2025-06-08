@@ -26,6 +26,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const { data: user, isLoading, error } = useCurrentUser();
   const logout = useLogout();
   const [hasToken, setHasToken] = useState(!!localStorage.getItem('accessToken'));
+  const [hasRefreshToken, setHasRefreshToken] = useState(!!localStorage.getItem('refreshToken'));
 
   // Listen for token changes to update authentication state
   useEffect(() => {
@@ -33,25 +34,38 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (event.key === 'accessToken') {
         setHasToken(!!event.newValue);
       }
+      if (event.key === 'refreshToken') {
+        setHasRefreshToken(!!event.newValue);
+      }
     };
 
     window.addEventListener('storage', handleStorageChange);
     
-    // Check initial token state
+    // Check initial token states
     setHasToken(!!localStorage.getItem('accessToken'));
+    setHasRefreshToken(!!localStorage.getItem('refreshToken'));
 
     return () => {
       window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
 
-  // If there's no token, user is definitely not authenticated
+  // Determine authentication state
+  // If there's no access token, definitely not authenticated
+  // If there's an error (like 401), not authenticated unless we're refreshing
+  // If there's an access token and user data, authenticated
   const isAuthenticated = hasToken && !!user && !error;
+  
+  // Only show loading if:
+  // 1. We have an access token AND we're loading AND no error, OR
+  // 2. We have a refresh token but no access token (refresh in progress)
+  const actuallyLoading = (hasToken && isLoading && !error) || 
+                          (!hasToken && hasRefreshToken && isLoading);
 
   const value: AuthContextType = {
     user: user || null,
     isAuthenticated,
-    isLoading: hasToken ? isLoading : false, // Only show loading if we have a token
+    isLoading: actuallyLoading,
     logout,
   };
 
