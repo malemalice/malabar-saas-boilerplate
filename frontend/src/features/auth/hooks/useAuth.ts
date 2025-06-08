@@ -13,58 +13,98 @@ export const authKeys = {
 // Get current user
 export const useCurrentUser = () => {
   const [hasToken, setHasToken] = useState(!!localStorage.getItem('accessToken'));
+  const [hasRefreshToken, setHasRefreshToken] = useState(!!localStorage.getItem('refreshToken'));
   const queryClient = useQueryClient();
   
   useEffect(() => {
-    // Update hasToken state when localStorage changes
-    const checkToken = () => {
-      const tokenExists = !!localStorage.getItem('accessToken');
-      setHasToken(tokenExists);
+    // Update token states when localStorage changes
+    const checkTokens = () => {
+      const accessTokenExists = !!localStorage.getItem('accessToken');
+      const refreshTokenExists = !!localStorage.getItem('refreshToken');
       
-      // If token was removed, immediately clear user data from cache
-      if (!tokenExists) {
+      setHasToken(accessTokenExists);
+      setHasRefreshToken(refreshTokenExists);
+      
+      // If both tokens were removed, immediately clear user data from cache
+      if (!accessTokenExists && !refreshTokenExists) {
         queryClient.setQueryData(authKeys.me(), null);
         queryClient.removeQueries({ queryKey: authKeys.me() });
       }
     };
     
     // Listen for storage events (from other tabs and manual dispatches)
-    window.addEventListener('storage', checkToken);
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === 'accessToken' || event.key === 'refreshToken') {
+        checkTokens();
+      }
+    };
     
-    // Check token on mount
-    checkToken();
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Check tokens on mount
+    checkTokens();
     
     return () => {
-      window.removeEventListener('storage', checkToken);
+      window.removeEventListener('storage', handleStorageChange);
     };
   }, [queryClient]);
   
   const query = useQuery({
     queryKey: authKeys.me(),
     queryFn: authService.getCurrentUser,
-    retry: false,
+    retry: (failureCount, error: any) => {
+      // Don't retry on 401/403 errors - these indicate invalid/expired tokens
+      if (error?.response?.status === 401 || error?.response?.status === 403) {
+        return false;
+      }
+      if (error?.statusCode === 401 || error?.statusCode === 403) {
+        return false;
+      }
+      return failureCount < 2;
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
-    enabled: hasToken, // Only fetch if we have a token
-    onError: (error: any) => {
+    enabled: hasToken, // Only fetch if we have an access token
+  });
+
+  // Handle authentication errors - this runs on every render when there's an error
+  useEffect(() => {
+    if (query.error && hasToken) {
+      const error = query.error as any;
+      
       // Handle authentication errors
-      if (error?.response?.status === 401) {
-        console.log('User authentication failed, clearing token');
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
-        setHasToken(false);
+      if (error?.response?.status === 401 || error?.statusCode === 401) {
+        console.log('User authentication failed - access token invalid');
         
-        // Trigger storage event to notify other components
-        window.dispatchEvent(new StorageEvent('storage', {
-          key: 'accessToken',
-          oldValue: localStorage.getItem('accessToken'),
-          newValue: null,
-          storageArea: localStorage
-        }));
+        // If we have a refresh token, the axios interceptor will handle the refresh
+        // If the refresh also fails, it will clear both tokens
+        if (!hasRefreshToken) {
+          console.log('No refresh token available, clearing auth state');
+          
+          // Clear tokens immediately if no refresh token
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('refreshToken');
+          setHasToken(false);
+          setHasRefreshToken(false);
+          
+          // Clear query cache
+          queryClient.setQueryData(authKeys.me(), null);
+          queryClient.removeQueries({ queryKey: authKeys.me() });
+          
+          // Trigger storage event to notify other components
+          window.dispatchEvent(new StorageEvent('storage', {
+            key: 'accessToken',
+            oldValue: localStorage.getItem('accessToken'),
+            newValue: null,
+            storageArea: localStorage
+          }));
+        }
+        // If we have a refresh token, let the axios interceptor handle it
+        // It will either succeed and retry, or fail and clear both tokens
       }
     }
-  });
+  }, [query.error, hasToken, hasRefreshToken, queryClient]);
   
-  // When no token, return immediately with no loading state
+  // When no access token, return immediately with no loading state
   if (!hasToken) {
     return {
       data: undefined,
