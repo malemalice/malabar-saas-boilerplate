@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 import { useJoinedTeams } from '@/features/team';
 import { useAuth } from '@/features/auth';
 import { TeamRole, TEAM_ROLES } from '@/constants/teamRoles';
-import { FirstLetterUpper } from '@/lib/utils';
 
 interface ActiveTeam {
   id: string;
