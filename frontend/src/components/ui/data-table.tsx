@@ -37,7 +37,6 @@ export function DataTable<T>({
   currentPage = 1,
   totalPages = 1,
   rowsPerPage = "10",
-  totalItems = 0,
   onPageChange,
   onRowsPerPageChange,
   getRowKey,
